@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 0 — Camera, Lens & Perspective</title>
+
+  <!-- Handwritten fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #2b2b2b;
+      --marker: #1a1a1a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    /* ---------- CORK BULLETIN BOARD BACKGROUND ---------- */
+    body {
+      font-family: "Kalam", "Comic Sans MS", cursive;
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 34px;
+      background-color: #c49a63;
+      background-image:
+        radial-gradient(circle at 20% 35%, rgba(90,55,20,.28) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 70% 15%, rgba(60,35,10,.30) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 45% 75%, rgba(255,240,210,.35) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 85% 60%, rgba(80,50,18,.25) 0 2px,  transparent 2.5px),
+        radial-gradient(circle at 10% 80%, rgba(255,235,200,.30) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 55% 45%, rgba(70,42,14,.22) 0 1.5px, transparent 2px),
+        radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.10), transparent 70%);
+      background-size: 37px 41px, 53px 47px, 43px 39px, 61px 59px, 47px 53px, 31px 33px, 100% 100%;
+    }
+
+    /* wood frame around the whole board */
+    .board {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 30px 24px 70px;
+      border: 18px solid;
+      border-image: repeating-linear-gradient(
+        45deg, #8a5a2b, #8a5a2b 10px, #7a4d22 10px, #7a4d22 20px) 18;
+      box-shadow: inset 0 0 60px rgba(0,0,0,.35), 0 20px 40px rgba(0,0,0,.4);
+      border-radius: 4px;
+    }
+
+    /* ---------- HEADER ---------- */
+    .page-head {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+    .page-head .title-card {
+      display: inline-block;
+      background: #fffdf5;
+      padding: 14px 40px;
+      transform: rotate(-1.5deg);
+      box-shadow: 0 6px 14px rgba(0,0,0,.35);
+      position: relative;
+    }
+    .page-head h1 {
+      font-family: "Permanent Marker", cursive;
+      font-weight: 400;
+      margin: 0;
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      color: var(--marker);
+      letter-spacing: .5px;
+    }
+    .page-head .course {
+      font-size: 1.05rem;
+      color: #555;
+      margin-top: 4px;
+    }
+    .breadcrumb {
+      text-align: center;
+      margin-bottom: 18px;
+      font-family: "Kalam", cursive;
+    }
+    .breadcrumb a { color: #fff8e7; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    /* ---------- SECTIONS ---------- */
+    .part { margin: 55px 0; }
+
+    /* section title = index card pinned to the board */
+    .card-title {
+      display: inline-block;
+      background: repeating-linear-gradient(#fffdf3, #fffdf3 27px, #dfeaf5 28px);
+      background-color: #fffdf3;
+      font-family: "Permanent Marker", cursive;
+      font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+      color: var(--marker);
+      padding: 16px 28px 12px;
+      box-shadow: 0 5px 12px rgba(0,0,0,.3);
+      position: relative;
+      margin-bottom: 30px;
+    }
+    .part:nth-child(odd) .card-title { transform: rotate(-1.2deg); }
+    .part:nth-child(even) .card-title { transform: rotate(1deg); }
+
+    /* ---------- PHOTOS (no frame, just pinned to the cork) ---------- */
+    .photos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    figure.photo {
+      margin: 0;
+      max-width: 460px;
+      flex: 1 1 340px;
+      position: relative;
+      padding-top: 22px; /* room for the pin */
+    }
+    figure.photo:nth-child(1) { transform: rotate(-1.3deg); }
+    figure.photo:nth-child(2) { transform: rotate(1.4deg); }
+
+    figure.photo img {
+      display: block;
+      width: 100%;
+      height: auto;
+      /* NO frame — just a soft drop shadow so it lifts off the cork */
+      box-shadow: 0 10px 22px rgba(0,0,0,.45);
+    }
+
+    /* push pin */
+    .pin {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ff8a8a, #d12f2f 60%, #8f1c1c);
+      box-shadow: 0 3px 4px rgba(0,0,0,.5);
+      z-index: 3;
+    }
+    .pin::after { /* little highlight */
+      content: "";
+      position: absolute;
+      top: 4px; left: 5px;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.8);
+    }
+    figure.photo:nth-child(2) .pin {
+      background: radial-gradient(circle at 35% 30%, #8ab6ff, #2f6ed1 60%, #1c3f8f);
+    }
+
+    figcaption {
+      text-align: center;
+      font-family: "Kalam", cursive;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-top: 10px;
+      color: #2b2b2b;
+      background: #fff8dc;
+      display: inline-block;
+      padding: 3px 14px;
+      transform: rotate(-1deg);
+      box-shadow: 0 3px 7px rgba(0,0,0,.25);
+      /* center the caption chip */
+      position: relative;
+      left: 50%;
+      translate: -50%;
+    }
+    figcaption .tag {
+      display: block;
+      font-weight: 400;
+      font-size: .95rem;
+    }
+    .tag.wrong { color: #b32020; }
+    .tag.right { color: #1f7a37; }
+
+    /* single centered photo (dolly zoom gif) */
+    .photos.single figure.photo { flex: 0 1 620px; max-width: 620px; }
+
+    /* ---------- SCRAP-OF-PAPER ANALYSIS BOX ---------- */
+    .analysis {
+      position: relative;
+      max-width: 760px;
+      margin: 40px auto 0;
+      background:
+        repeating-linear-gradient(
+          transparent, transparent 31px, #b9d4e8 31px, #b9d4e8 32px),
+        linear-gradient(#fffef8, #fdf8ea);
+      padding: 34px 40px 40px;
+      font-family: "Kalam", cursive;
+      font-size: 1.25rem;
+      line-height: 32px;              /* matches the ruled lines */
+      color: #26313d;
+      box-shadow: 0 12px 26px rgba(0,0,0,.4);
+      transform: rotate(-.6deg);
+      /* torn / ragged edges */
+      clip-path: polygon(
+        0% 2%, 8% 0%, 22% 2%, 40% 0%, 58% 2%, 74% 0%, 90% 2%, 100% 1%,
+        99% 20%, 100% 42%, 98% 66%, 100% 84%, 99% 100%,
+        80% 98%, 62% 100%, 44% 98%, 26% 100%, 10% 99%, 0% 100%,
+        1% 78%, 0% 54%, 2% 32%, 0% 14%);
+    }
+    .part:nth-child(even) .analysis { transform: rotate(.7deg); }
+
+    /* red margin line down the left */
+    .analysis::before {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 30px;
+      width: 2px;
+      background: rgba(200,60,60,.45);
+    }
+    /* strip of tape at the top */
+    .analysis::after {
+      content: "";
+      position: absolute;
+      top: -14px; left: 50%;
+      transform: translateX(-50%) rotate(-2deg);
+      width: 120px; height: 30px;
+      background: rgba(255,235,150,.55);
+      border-left: 1px dashed rgba(0,0,0,.15);
+      border-right: 1px dashed rgba(0,0,0,.15);
+      box-shadow: 0 2px 4px rgba(0,0,0,.15);
+    }
+    .analysis .label {
+      font-weight: 700;
+      color: #1a3a63;
+      font-size: 1.3rem;
+    }
+    /* faint hint text — replace this with your writing */
+    .analysis .placeholder {
+      color: #9aa6b0;
+      font-style: italic;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .board { padding: 20px 12px 50px; border-width: 12px; }
+      .photos { gap: 26px; }
+      figure.photo { flex: 1 1 100%; }
+      .analysis { padding: 28px 26px 34px; font-size: 1.15rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="board">
+
+    <p class="breadcrumb"><a href="../">&larr; CS 180</a> &nbsp;/&nbsp; <a href="../../">Home</a></p>
+
+    <header class="page-head">
+      <div class="title-card">
+        <h1>Project 0</h1>
+        <div class="course">Camera, Lens &amp; Perspective</div>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         PART 1 — SELFIE: WRONG WAY vs RIGHT WAY
+    ========================================================== -->
+    <section class="part">
+      <div class="card-title">Part 1 &mdash; Selfie: The Wrong Way vs. The Right Way</div>
+
+      <div class="photos">
+        <figure class="photo">
+          <div class="pin"></div>
+          <img src="part1_wrongway.jpg" alt="Close-up selfie, distorted">
+          <figcaption>0.5&times; Zoom &middot; 12mm<span class="tag wrong">the wrong way (up close)</span></figcaption>
+        </figure>
+
+        <figure class="photo">
+          <div class="pin"></div>
+          <img src="part1_rightway.jpg" alt="Selfie taken from farther back and zoomed in">
+          <figcaption>5&times; Zoom &middot; 120mm<span class="tag right">the right way (stepped back)</span></figcaption>
+        </figure>
+      </div>
+
+      <!-- ▼▼▼ WRITE YOUR PART 1 ANALYSIS BELOW. Replace the <p class="placeholder"> line. ▼▼▼ -->
+      <div class="analysis">
+        <p><span class="label">Analysis:</span>
+          <span class="placeholder">write your Part 1 analysis here…</span>
+        </p>
+      </div>
+      <!-- ▲▲▲ end Part 1 analysis ▲▲▲ -->
+    </section>
+
+    <!-- =========================================================
+         PART 2 — ARCHITECTURAL PERSPECTIVE COMPRESSION
+    ========================================================== -->
+    <section class="part">
+      <div class="card-title">Part 2 &mdash; Architectural Perspective Compression</div>
+
+      <div class="photos">
+        <figure class="photo">
+          <div class="pin"></div>
+          <img src="part2_regular.jpg" alt="Building shot wide and close">
+          <figcaption>0.5&times; Zoom &middot; 14mm<span class="tag">wide &amp; close (more 3-D)</span></figcaption>
+        </figure>
+
+        <figure class="photo">
+          <div class="pin"></div>
+          <img src="part2_zoomed.jpg" alt="Building shot zoomed from far">
+          <figcaption>2&times; Zoom &middot; 48mm<span class="tag">zoomed &amp; far (flatter)</span></figcaption>
+        </figure>
+      </div>
+
+      <!-- ▼▼▼ WRITE YOUR PART 2 ANALYSIS BELOW. Replace the <p class="placeholder"> line. ▼▼▼ -->
+      <div class="analysis">
+        <p><span class="label">Analysis:</span>
+          <span class="placeholder">write your Part 2 analysis here…</span>
+        </p>
+      </div>
+      <!-- ▲▲▲ end Part 2 analysis ▲▲▲ -->
+    </section>
+
+    <!-- =========================================================
+         PART 3 — DOLLY ZOOM
+    ========================================================== -->
+    <section class="part">
+      <div class="card-title">Part 3 &mdash; Dolly Zoom</div>
+
+      <div class="photos single">
+        <figure class="photo">
+          <div class="pin"></div>
+          <img src="ezgif.com-resize.gif" alt="Dolly zoom animation">
+          <figcaption>Dolly Zoom<span class="tag">subject fixed, background shifts</span></figcaption>
+        </figure>
+      </div>
+
+      <!-- ▼▼▼ WRITE YOUR PART 3 ANALYSIS BELOW. Replace the <p class="placeholder"> line. ▼▼▼ -->
+      <div class="analysis">
+        <p><span class="label">Analysis:</span>
+          <span class="placeholder">write your Part 3 analysis here…</span>
+        </p>
+      </div>
+      <!-- ▲▲▲ end Part 3 analysis ▲▲▲ -->
+    </section>
+
+  </div>
+</body>
+</html>
