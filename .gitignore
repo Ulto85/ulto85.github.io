@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Editors
+.vscode/
+
+# Large raw data / source originals NOT used by the published website
+# (the site uses the downscaled jpgs in forWebsiteInput/ and the output jpgs)
+*.tif
+cs180/project0/*.HEIC
+cs180/project0/*.PNG

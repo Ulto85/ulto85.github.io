@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 1: Prokudin-Gorskii Colorization</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --wall-1:#33413a;        /* museum green wall */
+      --wall-2:#26322c;
+      --cream:#f2ead8;         /* mat / panel */
+      --cream-2:#e7dcc2;
+      --ink:#2a2620;
+      --brass-lo:#8a6a1e;
+      --brass-hi:#f2dd97;
+      --gold:#d4af37;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+
+    body{
+      font-family:"EB Garamond", Georgia, serif;
+      color:var(--cream);
+      background-color:var(--wall-1);
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.06), transparent 55%),
+        radial-gradient(ellipse at 50% 120%, rgba(0,0,0,.55), transparent 60%),
+        linear-gradient(var(--wall-1), var(--wall-2));
+      background-attachment:fixed;
+      min-height:100vh;
+      line-height:1.6;
+    }
+
+    /* brass picture-rail line across the top */
+    .rail{
+      height:6px;
+      background:linear-gradient(#f4e29a,#b8912f 45%,#7a5c18 55%,#d8bd6a);
+      box-shadow:0 3px 8px rgba(0,0,0,.5);
+      position:sticky; top:0; z-index:50;
+    }
+
+    .wrap{ max-width:1280px; margin:0 auto; padding:0 22px 90px; }
+
+    .breadcrumb{ text-align:center; padding:16px 0 4px; font-size:1rem; letter-spacing:.04em; }
+    .breadcrumb a{ color:#d9cfb0; text-decoration:none; }
+    .breadcrumb a:hover{ text-decoration:underline; }
+
+    /* ---------- EXHIBITION HEADER ---------- */
+    header.exhibit{ text-align:center; padding:48px 10px 30px; }
+    .kicker{
+      font-family:"Cinzel", serif; letter-spacing:.32em; font-size:.8rem;
+      color:var(--gold); text-transform:uppercase; margin-bottom:18px;
+    }
+    header.exhibit h1{
+      font-family:"Cinzel", serif; font-weight:700;
+      font-size:clamp(2rem,6vw,3.6rem); margin:0; color:var(--cream);
+      letter-spacing:.02em; line-height:1.1;
+      text-shadow:0 2px 10px rgba(0,0,0,.4);
+    }
+    header.exhibit .subtitle{
+      font-style:italic; font-size:clamp(1.05rem,2.6vw,1.5rem);
+      color:#d9cfb0; margin-top:12px;
+    }
+    .ornament{ color:var(--gold); letter-spacing:.5em; margin:22px 0 0; font-size:1.1rem; }
+
+    /* ---------- EXHIBITION TEXT PANELS (you write these) ---------- */
+    .panel{
+      background:linear-gradient(#f7f0df,#ece0c4);
+      color:var(--ink);
+      border:1px solid #c9b98f;
+      border-radius:2px;
+      padding:26px 30px;
+      max-width:760px; margin:26px auto;
+      box-shadow:0 10px 26px rgba(0,0,0,.4);
+      font-size:1.12rem;
+    }
+    .panel h3{
+      font-family:"Cinzel",serif; font-weight:600; letter-spacing:.06em;
+      margin:0 0 10px; font-size:1.05rem; color:#5a4a22; text-transform:uppercase;
+    }
+    .panel .placeholder{ color:#9a8f76; font-style:italic; }
+    .panel.small{ font-size:1rem; padding:18px 24px; }
+
+    /* ---------- WING / SECTION TITLES ---------- */
+    .wing{ margin:74px 0 0; }
+    .wing-head{ text-align:center; margin-bottom:10px; }
+    .wing-head .num{
+      font-family:"Cinzel",serif; color:var(--gold); letter-spacing:.3em;
+      font-size:.78rem; text-transform:uppercase;
+    }
+    .wing-head h2{
+      font-family:"Cinzel",serif; font-weight:600; font-size:clamp(1.5rem,4vw,2.2rem);
+      margin:6px 0 0; color:var(--cream); letter-spacing:.03em;
+    }
+    .wing-head .rule{
+      width:80px; height:2px; margin:16px auto 0;
+      background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    }
+
+    /* offset legend */
+    .legend{
+      text-align:center; font-style:italic; color:#cbc0a2; font-size:1rem;
+      margin:10px auto 30px; max-width:640px;
+    }
+    .legend b{ font-style:normal; color:#e9dcb6; }
+
+    /* ---------- ENGRAVED BRASS METHOD PLATE (formulas) ---------- */
+    .method-plate{
+      max-width:760px; margin:26px auto;
+      background:
+        linear-gradient(160deg,#c9a53f,#efdc9a 30%,#a9832a 55%,#e4cd7d 80%,#b8912f);
+      border:3px solid #6f5314; border-radius:6px;
+      box-shadow:0 12px 30px rgba(0,0,0,.5), inset 0 0 0 2px rgba(0,0,0,.15);
+      padding:30px 34px; position:relative; color:#2c2107;
+    }
+    .method-plate::before,.method-plate::after{
+      content:""; position:absolute; width:12px; height:12px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%,#fff4cf,#8a6a1e 70%,#5a4212);
+      box-shadow:inset 0 1px 2px rgba(0,0,0,.5);
+    }
+    .method-plate::before{ top:12px; left:12px; } .method-plate::after{ top:12px; right:12px; }
+    .method-plate .mp-title{
+      text-align:center; font-family:"Cinzel",serif; font-weight:600;
+      letter-spacing:.12em; text-transform:uppercase; font-size:1rem;
+      margin-bottom:18px; text-shadow:0 1px 0 rgba(255,255,255,.35);
+    }
+    .formula{
+      text-align:center; margin:20px 0; font-size:1.35rem;
+      text-shadow:0 1px 0 rgba(255,255,255,.4);
+    }
+    .formula .name{
+      display:block; font-family:"Cinzel",serif; font-size:.72rem;
+      letter-spacing:.2em; text-transform:uppercase; color:#5a4212; margin-bottom:6px;
+    }
+    .frac{ display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .2em; }
+    .frac .top{ border-bottom:2px solid #4a3810; padding:0 .35em; }
+    .frac .bot{ padding:0 .35em; }
+    .sqrt{ border-top:2px solid #4a3810; padding:0 .1em 0 .2em; }
+    .radic{ font-size:1.2em; }
+    sub,sup{ font-size:.68em; }
+
+    /* ---------- ARTWORK CARDS ---------- */
+    /* one big artwork per row so the plates show large */
+    .grid{ display:grid; grid-template-columns:1fr; gap:64px; margin-top:8px; }
+
+    figure.artwork{ margin:0; }
+    .mount{ display:flex; gap:26px; align-items:flex-start; justify-content:center; }
+
+    /* output column keeps the frame(s) + plaque stacked and centered together */
+    .out-col{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:center; }
+    .pair{ display:flex; gap:22px; width:100%; align-items:flex-start; }
+    .pair .fcell{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; }
+    .fcell .fcap{
+      font-family:"Cinzel",serif; font-size:.82rem; letter-spacing:.16em; text-transform:uppercase;
+      color:#cbc0a2; margin-bottom:9px;
+    }
+
+    /* input strip = glass-plate negative */
+    .strip-wrap{ flex:0 0 150px; text-align:center; }
+    .strip-wrap img{
+      width:100%; display:block; border:3px solid #1c1c1c;
+      box-shadow:0 4px 12px rgba(0,0,0,.5);
+    }
+    .strip-wrap .cap{
+      display:block; margin-top:9px; font-size:.85rem; font-style:italic;
+      color:#bfb495; letter-spacing:.02em; line-height:1.3;
+    }
+
+    /* gold frame + cream mat around the color output */
+    .frame{
+      width:100%;
+      background:#f4efe2;
+      padding:12px;
+      border:11px solid transparent;
+      border-image:linear-gradient(135deg,#a9832a,#f2dd97 25%,#b8912f 50%,#efdc9a 75%,#8a6a1e) 11;
+      box-shadow:0 14px 34px rgba(0,0,0,.55), inset 0 0 0 2px rgba(0,0,0,.2);
+    }
+    .frame img{ display:block; width:100%; height:auto; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+
+    /* brass placard beneath - centered under the output */
+    .placard{
+      max-width:440px; margin:22px auto 0; position:relative;
+      background:linear-gradient(160deg,#c9a53f,#ecd691 35%,#a9832a 60%,#ddc274);
+      border:2px solid #6f5314; border-radius:4px;
+      box-shadow:0 5px 14px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.18);
+      padding:16px 22px 17px; color:#2b2107; text-align:center;
+    }
+    .placard::before,.placard::after{
+      content:""; position:absolute; top:9px; width:7px; height:7px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%,#fff4cf,#8a6a1e 70%);
+    }
+    .placard::before{ left:10px; } .placard::after{ right:10px; }
+    .placard .p-title{
+      font-family:"Cinzel",serif; font-weight:600; font-size:1.25rem; letter-spacing:.06em;
+      text-shadow:0 1px 0 rgba(255,255,255,.4);
+    }
+    .placard .p-sub{ font-style:italic; font-size:.95rem; color:#5a4517; margin:2px 0 10px; }
+    .placard .p-off{ font-size:1.08rem; line-height:1.55; text-shadow:0 1px 0 rgba(255,255,255,.35); }
+    .placard .p-off .lbl{
+      display:inline-block; min-width:2.2em; font-family:"Cinzel",serif; font-size:.82rem;
+      letter-spacing:.1em; color:#4a3810;
+    }
+    .placard .p-off .g{ color:#1c5a2a; font-weight:500; }
+    .placard .p-off .r{ color:#8a2418; font-weight:500; }
+    .placard .p-off .t{ color:#5a4517; font-style:italic; }
+
+    /* failure ribbon for the emir card */
+    .placard.fail{ background:linear-gradient(160deg,#b98b8b,#e9c9c9 35%,#a56b6b 60%,#d9a9a9); border-color:#6f2c2c; }
+
+    /* ---------- SPECIAL EXHIBIT (EMIR) ---------- */
+    .special{
+      margin-top:30px;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.14), transparent 60%),
+        linear-gradient(#2c3830,#212b25);
+      border:1px solid rgba(212,175,55,.4); border-radius:4px;
+      padding:34px 26px 40px;
+      box-shadow:inset 0 0 60px rgba(0,0,0,.4);
+    }
+    .special .tag{
+      display:inline-block; font-family:"Cinzel",serif; letter-spacing:.2em; font-size:.72rem;
+      text-transform:uppercase; color:#0f130f; background:linear-gradient(#f2dd97,#c9a53f);
+      padding:5px 14px; border-radius:2px; margin-bottom:8px;
+    }
+    .special-mount{ display:flex; flex-wrap:wrap; gap:36px; justify-content:center; align-items:flex-start; }
+    .special-mount .out-col{ flex:1 1 480px; max-width:600px; }
+
+    /* ---------- MULTI-SCALE PYRAMID ANIMATION ---------- */
+    .pyramid-fig{ max-width:520px; margin:24px auto 0; text-align:center; }
+    .pyramid{
+      display:flex; flex-direction:column; align-items:center; gap:9px;
+      padding:26px 20px; background:linear-gradient(#f7f0df,#e6d9bd);
+      border-radius:3px; border:1px solid #c9b98f;
+      box-shadow:0 10px 26px rgba(0,0,0,.4);
+    }
+    .level{
+      height:26px; border-radius:3px; border:1px solid #8a6a1e;
+      background:linear-gradient(#fbf4e0,#e3d3ac);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.72rem; color:#5a4517; letter-spacing:.05em;
+      animation:glow 6s infinite;
+    }
+    .level.l1{ width:24%; animation-delay:0s; }
+    .level.l2{ width:46%; animation-delay:1.4s; }
+    .level.l3{ width:72%; animation-delay:2.8s; }
+    .level.l4{ width:100%; animation-delay:4.2s; }
+    @keyframes glow{
+      0%,100%{ box-shadow:none; filter:brightness(1); }
+      3%{ box-shadow:0 0 20px 3px var(--gold); filter:brightness(1.28); border-color:#4a3810; }
+      18%{ box-shadow:none; filter:brightness(1); }
+    }
+    .pyramid-fig .arrow{
+      font-family:"Cinzel",serif; letter-spacing:.16em; font-size:.72rem;
+      color:#cbc0a2; margin-top:14px; text-transform:uppercase;
+    }
+    .pyramid-fig .arrow b{ color:var(--gold); font-weight:600; }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width:760px){
+      .grid{ grid-template-columns:1fr; gap:40px; }
+      .method-plate,.formula{ font-size:1.15rem; }
+    }
+    @media (max-width:440px){
+      .mount{ flex-direction:column; align-items:center; }
+      .strip-wrap{ flex-basis:auto; width:120px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="rail"></div>
+  <div class="wrap">
+
+    <p class="breadcrumb"><a href="../">&larr; CS 180</a> &nbsp;/&nbsp; <a href="../../">Home</a></p>
+
+    <!-- ============ EXHIBITION HEADER ============ -->
+    <header class="exhibit">
+      <div class="kicker">CS 180 &middot; Programming Project 1</div>
+      <h1>Images of the<br>Russian Empire</h1>
+      <div class="subtitle">Colorizing the Prokudin-Gorskii Photo Collection</div>
+      <div class="ornament">&#10070; &#10070; &#10070;</div>
+    </header>
+
+    <!-- Curatorial intro - WRITE YOUR OWN OVERVIEW HERE -->
+    <div class="panel">
+      <h3>Curator's Note</h3>
+      <p class=>The goal of this project was to align the color negatives to effectively clolorize the Prokudin-Gorskii photo collection. We explored doing this on a single-scale and then utilizing multi-scale to make it faster</p>
+    </div>
+
+    <!-- ============ WING I - THE METHOD ============ -->
+    <section class="wing">
+      <div class="wing-head">
+        <div class="num">Gallery I</div>
+        <h2>The Method</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="method-plate">
+        <div class="mp-title">Alignment Metrics</div>
+
+        <div class="formula">
+          <span class="name">L2 &middot; Euclidean Distance</span>
+          D(u,v) =
+          <span class="radic">&radic;</span><span class="sqrt">
+            &Sigma;<sub>x,y</sub> &nbsp;( I<sub>1</sub>(x,y) &minus; I<sub>2</sub>(x+u,&nbsp;y+v) )<sup>2</sup>
+          </span>
+        </div>
+
+        <div class="formula">
+          <span class="name">Normalized Cross-Correlation</span>
+          NCC =
+          <span class="frac">
+            <span class="top">( I<sub>1</sub> &minus; &#x12A;<sub>1</sub> ) &middot; ( I<sub>2</sub> &minus; &#x12A;<sub>2</sub> )</span>
+            <span class="bot">&#8214; I<sub>1</sub> &minus; &#x12A;<sub>1</sub> &#8214; &nbsp;&#8214; I<sub>2</sub> &minus; &#x12A;<sub>2</sub> &#8214;</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="panel small">
+        <h3>How it works</h3>
+        <p>For both single-scale and multi-scale I chose to remove 5% off of each edge (to account for borders, etc.), which seemed to work reasonably well. I also normalized each image (defined as centering it and then dividing by the Frobenius norm). This was to account for varying intensities, but as we see it was still ineffective for the Emir.<br><br>For single scale (the following image) I did a search across displacements from (-20, 20) for both dx and dy. Then I would shift the image. Instead of using roll (I did so originally, but as you can see in the scratch files in my code I quickly abandoned that approach) I decided to use splicing. Intuitively, to me, if I stack 2 images on top of each other and I shift the top one left 15, then its left 15 pixels go off the edge (out of bounds), but the bottom bounds' right 15 also interact with nothing (out of bounds). So I splice those and then use both L2 and NCC to calculate. The downside to this approach is that big shifts compare fewer pixels, which could affect our interpretation of the loss; however, since we use a small shift of around 20 pixels, that effect doesn't really come into play. Furthermore, also, instead, by using rolling you introduce "adversarial pixels", i.e. it doesn't really make sense to compare the wrap-around, and I found that worked less.</p>
+      </div>
+    </section>
+
+    <!-- ============ WING II - SINGLE-SCALE ============ -->
+    <section class="wing">
+      <div class="wing-head">
+        <div class="num">Gallery II</div>
+        <h2>Single-Scale Alignment</h2>
+        <div class="rule"></div>
+      </div>
+      <p class="legend">Low-resolution JPEGs, exhaustive search over a
+        <b>[&minus;20, 20]</b> pixel window. Displacement listed as
+        <b>(x,&nbsp;y)</b>, horizontal then vertical, applied to the green &amp; red plates
+        relative to blue.</p>
+
+      <div class="grid" id="grid-single"></div>
+    </section>
+
+    <!-- ============ WING III - MULTI-SCALE PYRAMID ============ -->
+    <section class="wing">
+      <div class="wing-head">
+        <div class="num">Gallery III</div>
+        <h2>The Image Pyramid</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="pyramid-fig">
+        <div class="pyramid">
+          <div class="level l1">&frac18; scale &nbsp;&middot;&nbsp; coarse</div>
+          <div class="level l2">&frac14; scale</div>
+          <div class="level l3">&frac12; scale</div>
+          <div class="level l4">full resolution &nbsp;&middot;&nbsp; fine</div>
+        </div>
+        <div class="arrow">Coarse &rarr; Fine &nbsp;|&nbsp; estimate <b>doubles &amp; refines</b> each level</div>
+      </div>
+
+      <div class="panel">
+        <h3>The Coarse-to-Fine Idea</h3>
+        <p>As mentioned above, we do the same preprocessing here (crop the border by cropping 5% off of each side, then we normalize to try to reduce the effect of intensities differing too much in magnitude). Now starts the pyramid-ing. I'll get into the actual speed reasoning, but empirically it makes sense by looking at the difference of the low-res images between single scale and multi-scale. How this works is we divide by 2 until one of our dimensions is &le; 200 pixels. I assume this is good enough to reduce to single scale. I then run single scale on it to get an initial displacement estimate. Then I travel "up" the pyramid. Every time I travel up I multiply the previous displacement found in the previous layer by 2 to account for the scale getting bigger as I travel back up, then I do a small search of &plusmn;2 pixels to account for any new info that comes about by the better resolutions. We continue this till we get to the top level. Now, why is this faster? Well, if we think about it, one pixel in an 8&times; downsampled image corresponds to an 8 by 8 in the bigger image. And then you do a smaller search, but effectively, by doing the most exhaustive search at the bottom level, we are able to cover most of the range efficiently, and then each level up we do some tweaks, as opposed to doing an exhaustive &plusmn;20 on each search in the largest window. (It's the same amount of ops, but calculating the loss etc. is faster when the image is smaller, intuitively, and then we do small comps with bigger.)</p>
+      </div>
+
+      <p class="legend">Full-resolution plates. Both metrics reported as
+        <b>(x,&nbsp;y)</b>. Offsets computed on RGB pixel values.</p>
+
+      <div class="grid" id="grid-multi"></div>
+    </section>
+
+    <!-- ============ SPECIAL EXHIBIT - THE EMIR ============ -->
+    <section class="wing">
+      <div class="wing-head">
+        <div class="num">Special Exhibit</div>
+        <h2>The Emir of Bukhara</h2>
+        <div class="rule"></div>
+      </div>
+
+      <div class="special">
+        <div style="text-align:center"><span class="tag">The Odd One Out</span></div>
+
+        <div class="special-mount" id="emir-mount"></div>
+
+        <div class="panel" style="margin-top:30px">
+          <h3>Why the raw-pixel metrics fail here</h3>
+          <p>The reason the Emir fails is because the blue and gold robe looks very light on the blue pane but very dark on the red pane; in fact, the negatives almost look like inverses on the robe. Because of this, regardless of normalization, the L2 and NCC metrics find it hard to place these on top of each other because they differ by so much. This is what leads to the off shift.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MY ADDITIONAL IMAGES (custom picks) ============ -->
+    <section class="wing">
+      <div class="wing-head">
+        <div class="num">Gallery IV</div>
+        <h2>My Own Selections</h2>
+        <div class="rule"></div>
+      </div>
+      <p class="legend">Additional plates I chose from the Prokudin-Gorskii collection, run
+        through the same multi-scale pyramid. Both metrics reported as <b>(x,&nbsp;y)</b>.</p>
+
+      <div class="panel small">
+        <h3>About These Picks</h3>
+        <p class="placeholder">I thought these looked cool, and they worked with the algoirhtm out of the box</p>
+      </div>
+
+      <div class="grid" id="grid-custom"></div>
+    </section>
+
+  </div>
+
+  <!-- =========================================================
+       DATA + CARD RENDERER
+       Offsets are auto-generated from metadata.json (dx, dy).
+       To refresh after re-running results.py, just replace the
+       numbers in DATA below.  Titles you can rename freely.
+  ========================================================== -->
+  <script>
+    // offsets = (dx, dy); mt = multi-scale run times {l2, ncc} in seconds;
+    // st = single-scale run times (only the three low-res plates).
+    const DATA = {
+      cathedral:        { title:"Cathedral",          l2:{g:[2,5],   r:[3,12]},   ncc:{g:[2,5],   r:[3,12]},   mt:{l2:0.24,ncc:0.31}, st:{l2:0.53,ncc:1.79} },
+      monastery:        { title:"Monastery",          l2:{g:[2,-3],  r:[2,3]},    ncc:{g:[2,-3],  r:[2,3]},    mt:{l2:0.10,ncc:0.53}, st:{l2:0.54,ncc:2.13} },
+      tobolsk:          { title:"Tobolsk",            l2:{g:[3,3],   r:[3,6]},     ncc:{g:[3,3],   r:[3,6]},    mt:{l2:0.10,ncc:0.45}, st:{l2:0.44,ncc:1.81} },
+      church:           { title:"Church",             l2:{g:[4,25],  r:[-4,58]},   ncc:{g:[4,25],  r:[-4,58]},  mt:{l2:3.38,ncc:9.49} },
+      harvesters:       { title:"Harvesters",         l2:{g:[17,60], r:[14,124]},  ncc:{g:[17,60], r:[14,124]}, mt:{l2:3.39,ncc:9.88} },
+      icon:             { title:"Icon",               l2:{g:[17,41], r:[23,89]},   ncc:{g:[17,41], r:[23,89]},  mt:{l2:3.33,ncc:9.84} },
+      ilemselga:        { title:"Ilemselga",          l2:{g:[7,40],  r:[11,130]},  ncc:{g:[7,40],  r:[11,130]}, mt:{l2:3.59,ncc:10.4} },
+      melons:           { title:"Melons",             l2:{g:[11,82], r:[13,179]},  ncc:{g:[11,82], r:[13,178]}, mt:{l2:3.76,ncc:10.1} },
+      religous_painting:{ title:"Religious Painting", l2:{g:[3,28],  r:[7,68]},    ncc:{g:[3,28],  r:[7,68]},   mt:{l2:2.80,ncc:10.11} },
+      self_portrait:    { title:"Self-Portrait",      l2:{g:[29,79], r:[37,176]},  ncc:{g:[29,79], r:[37,176]}, mt:{l2:3.05,ncc:9.83} },
+      siren:            { title:"Siren",              l2:{g:[-6,49], r:[-25,96]},  ncc:{g:[-6,49], r:[-25,96]},  mt:{l2:3.13,ncc:10.45} },
+      three_generations:{ title:"Three Generations",  l2:{g:[14,53], r:[11,112]},  ncc:{g:[14,53], r:[11,112]}, mt:{l2:2.85,ncc:9.40} },
+      wharf:            { title:"Wharf",              l2:{g:[-7,15], r:[-16,83]},  ncc:{g:[-7,15], r:[-16,82]},  mt:{l2:2.99,ncc:11.6} },
+      custom1:          { title:"Selection I",        l2:{g:[-13,47],r:[-43,85]},  ncc:{g:[-13,47],r:[-42,85]}, mt:{l2:3.66,ncc:9.07} },
+      custom2:          { title:"Selection II",       l2:{g:[5,63],  r:[-2,133]},  ncc:{g:[5,63],  r:[-2,133]},  mt:{l2:3.54,ncc:8.64} },
+      custom3:          { title:"Selection III",      l2:{g:[-5,60], r:[-21,130]}, ncc:{g:[-5,60], r:[-21,130]}, mt:{l2:3.22,ncc:9.07} },
+      emir:             { title:"The Emir of Bukhara",l2:{g:[24,49], r:[-350,-350]}, ncc:{g:[24,49], r:[-306,93]}, mt:{l2:3.61,ncc:8.62} },
+    };
+
+    const t = (v) => `(${v[0]}, ${v[1]})`;
+    const strip = (key) => `
+      <div class="strip-wrap">
+        <img src="forWebsiteInput/${key}.jpg" alt="glass-plate negative" loading="lazy">
+        <span class="cap">glass-plate<br>negative</span>
+      </div>`;
+
+    // both metric rows + run times
+    function offRows(d, times){
+      return `
+        <div class="p-off">
+          <div><span class="lbl">NCC</span> <span class="g">G ${t(d.ncc.g)}</span> &middot; <span class="r">R ${t(d.ncc.r)}</span> <span class="t">${times.ncc}s</span></div>
+          <div><span class="lbl">L2</span> <span class="g">G ${t(d.l2.g)}</span> &middot; <span class="r">R ${t(d.l2.r)}</span> <span class="t">${times.l2}s</span></div>
+        </div>`;
+    }
+
+    function placard(d, sub, times){
+      return `
+        <div class="placard">
+          <div class="p-title">${d.title}</div>
+          <div class="p-sub">Prokudin-Gorskii &middot; ${sub}</div>
+          ${offRows(d, times)}
+        </div>`;
+    }
+
+    // card: strip + BOTH L2 and NCC framed outputs + centered plaque
+    function cardPair(key, folder, sub, times){
+      const d = DATA[key];
+      const fcell = (loss,label) => `
+        <div class="fcell">
+          <div class="fcap">${label}</div>
+          <div class="frame"><img src="${folder}/${loss}/${key}.jpg" alt="${d.title} - ${label}" loading="lazy"></div>
+        </div>`;
+      return `
+        <figure class="artwork">
+          <div class="mount">
+            ${strip(key)}
+            <div class="out-col">
+              <div class="pair">${fcell("l2Loss","L2")}${fcell("NCCLoss","NCC")}</div>
+              ${placard(d, sub, times)}
+            </div>
+          </div>
+        </figure>`;
+    }
+
+    // Single scale - the three low-res plates, both metrics shown
+    document.getElementById('grid-single').innerHTML =
+      ["cathedral","monastery","tobolsk"].map(k => cardPair(k,"code/singleScale","single-scale",DATA[k].st)).join("");
+
+    // Multi scale - the provided plates only (emir shown separately), both metrics shown
+    const provided = ["cathedral","monastery","tobolsk","church","harvesters","icon",
+      "ilemselga","melons","religous_painting","self_portrait","siren","three_generations","wharf"];
+    document.getElementById('grid-multi').innerHTML =
+      provided.map(k => cardPair(k,"code/multiScale","multi-scale pyramid",DATA[k].mt)).join("");
+
+    // My own additional selections - separate gallery, both metrics shown
+    const customs = ["custom1","custom2","custom3"];
+    document.getElementById('grid-custom').innerHTML =
+      customs.map(k => cardPair(k,"code/multiScale","my selection",DATA[k].mt)).join("");
+
+    // Emir special exhibit - show BOTH metric outputs so the failure is visible
+    (function(){
+      const d = DATA.emir;
+      const one = (loss,label,off) => `
+        <figure class="artwork">
+          <div class="out-col">
+            <div class="frame"><img src="code/multiScale/${loss}/emir.jpg" alt="Emir - ${label}" loading="lazy"></div>
+            <div class="placard fail">
+              <div class="p-title">${label}</div>
+              <div class="p-sub">red plate mis-locks &middot; ${d.mt[loss==='NCCLoss'?'ncc':'l2']}s</div>
+              <div class="p-off">
+                <span class="g">G ${t(d.g!==undefined?d.g:off.g)}</span> &middot;
+                <span class="r">R ${t(off.r)}</span>
+              </div>
+            </div>
+          </div>
+        </figure>`;
+      document.getElementById('emir-mount').innerHTML =
+        strip("emir") + one("NCCLoss","NCC metric",d.ncc) + one("l2Loss","L2 metric",d.l2);
+    })();
+  </script>
+</body>
+</html>
