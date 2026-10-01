@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 2: Filters & Frequencies</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#ffffff; --bg2:#fafafa; --ink:#0b0b0d; --ink2:#5b5b63; --faint:#8a8a92;
+      --line:#ececed; --line2:#e2e2e4; --chip:#f4f4f5; --code:#0d0d0f;
+      --radius:14px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; }
+    body{
+      font-family:"Inter",system-ui,-apple-system,sans-serif;
+      color:var(--ink); background:var(--bg);
+      line-height:1.6; -webkit-font-smoothing:antialiased;
+      letter-spacing:-0.01em;
+    }
+    .wrap{ max-width:1080px; margin:0 auto; padding:0 28px 140px; }
+
+    a{ color:inherit; }
+    .breadcrumb{ text-align:center; padding:22px 0 0; font-size:.82rem; color:var(--faint); letter-spacing:.01em; }
+    .breadcrumb a{ text-decoration:none; color:var(--ink2); border-bottom:1px solid transparent; }
+    .breadcrumb a:hover{ border-color:var(--ink2); }
+
+    /* ---------- HERO ---------- */
+    header.hero{ text-align:center; padding:92px 10px 36px; }
+    .hero .label{ font-size:.78rem; letter-spacing:.24em; text-transform:uppercase; color:var(--faint); margin-bottom:22px; }
+    .hero h1{
+      font-size:clamp(2.2rem,6vw,4.2rem); font-weight:800; letter-spacing:-0.04em;
+      margin:0; line-height:1.02; color:var(--ink);
+    }
+    .hero .sub{ color:var(--ink2); font-size:clamp(1rem,2.4vw,1.25rem); margin-top:18px; font-weight:400; }
+    /* soundwave graphic */
+    .wave{ display:flex; align-items:center; justify-content:center; gap:3px; height:72px; margin:40px auto 0; max-width:560px; }
+    .wave span{ width:3px; border-radius:99px; background:var(--ink); opacity:.88; }
+
+    /* ---------- SECTIONS ---------- */
+    .part{ margin:96px 0 0; }
+    .part > .kick{ font-size:.76rem; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); }
+    .part > h2{ font-size:clamp(1.6rem,4vw,2.3rem); font-weight:800; letter-spacing:-0.035em; margin:8px 0 0; }
+    .hr{ height:1px; background:var(--line); margin:22px 0 30px; }
+    .minwave{ display:flex; align-items:center; gap:2px; height:14px; margin:20px 0 30px; opacity:.5; }
+    .minwave span{ width:2px; border-radius:99px; background:var(--ink); }
+
+    .sub-h{ display:flex; align-items:baseline; gap:12px; margin:46px 0 6px; }
+    .sub-h .n{ font-family:"JetBrains Mono",monospace; font-size:.9rem; color:var(--faint); font-weight:500; }
+    .sub-h h3{ font-size:1.22rem; font-weight:700; letter-spacing:-0.02em; margin:0; }
+    .sub-h .pts{ font-size:.8rem; color:var(--faint); font-weight:400; margin-left:2px; }
+
+    .note{ color:var(--ink2); font-size:.95rem; margin:18px 0 10px; }
+    .prose{ color:var(--ink); font-size:1.02rem; margin:16px 0; }
+    .prose code{ font-family:"JetBrains Mono",monospace; font-size:.88em; background:var(--chip); padding:1px 5px; border-radius:5px; }
+
+    /* ---------- PLACEHOLDERS ---------- */
+    .ph{
+      border:1px dashed var(--line2); border-radius:12px; background:var(--bg2);
+      padding:15px 18px; margin:14px 0; color:var(--ink2); font-size:.96rem;
+    }
+    .ph::before{ content:"placeholder"; display:inline-block; font-size:.66rem; letter-spacing:.14em;
+      text-transform:uppercase; color:var(--faint); background:var(--chip); border-radius:6px;
+      padding:2px 8px; margin-right:10px; vertical-align:1px; }
+    .drop{
+      border:1px dashed var(--line2); border-radius:12px; background:var(--bg2);
+      min-height:140px; display:flex; align-items:center; justify-content:center; text-align:center;
+      color:var(--faint); font-size:.92rem; padding:20px; margin:14px 0;
+    }
+    .drop::before{ content:"＋"; margin-right:10px; font-size:1.1rem; }
+
+    /* ---------- CODE ---------- */
+    .code{ margin:16px 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--code); }
+    .code .bar{ display:flex; align-items:center; gap:7px; padding:10px 14px; background:#141417; border-bottom:1px solid #222; }
+    .code .bar i{ width:10px; height:10px; border-radius:50%; background:#2f2f34; display:inline-block; }
+    .code .bar b{ margin-left:8px; font-family:"JetBrains Mono",monospace; font-size:.72rem; color:#8a8a92; font-weight:500; letter-spacing:.02em; }
+    .code pre{ margin:0; padding:16px 18px; overflow-x:auto; }
+    .code code{ font-family:"JetBrains Mono",monospace; font-size:.82rem; line-height:1.6; color:#e6e6ea; white-space:pre; }
+
+    /* ---------- CARDS ---------- */
+    .card{ border:1px solid var(--line); border-radius:16px; padding:24px 26px; margin:24px 0; background:var(--bg); box-shadow:0 1px 2px rgba(0,0,0,.03); }
+    .card h4{ font-size:1.02rem; font-weight:700; letter-spacing:-0.02em; margin:0 0 14px; }
+    .card h4 + h4{ margin-top:22px; }
+    .card .pts{ color:var(--faint); font-weight:400; font-size:.85rem; }
+
+    /* ---------- IMAGE SHOTS ---------- */
+    .shots{ display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); margin:16px 0; }
+    .shots.two{ grid-template-columns:repeat(2,1fr); }
+    .shots.three{ grid-template-columns:repeat(3,1fr); }
+    .shots.six{ grid-template-columns:repeat(6,1fr); gap:10px; }
+    .shots.sweep{ grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+    @media (max-width:760px){ .shots.six{ grid-template-columns:repeat(3,1fr);} .shots.three{grid-template-columns:repeat(2,1fr);} }
+
+    figure.shot{ margin:0; }
+    figure.shot img{
+      width:100%; height:auto; display:block; border-radius:10px;
+      border:1px solid var(--line); background:var(--bg2);
+      transition:box-shadow .18s ease, transform .18s ease;
+    }
+    figure.shot img:hover{ box-shadow:0 8px 24px rgba(0,0,0,.08); transform:translateY(-2px); }
+    figure.shot figcaption{ margin-top:8px; text-align:center; font-size:.72rem; letter-spacing:.04em; color:var(--faint); text-transform:uppercase; }
+    figure.shot.feature{ max-width:520px; margin:18px auto; }
+    figure.shot.feature img{ border-color:var(--line2); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <p class="breadcrumb"><a href="../">CS 180</a> &nbsp;/&nbsp; <a href="../../">Home</a></p>
+
+    <header class="hero">
+      <div class="label">CS 180 · Programming Project 2</div>
+      <h1>Fun with Filters<br>&amp; Frequencies</h1>
+      <div class="sub">Convolutions, edges, hybrid images, and multiresolution blending.</div>
+      <div class="wave" id="hero-wave"></div>
+    </header>
+
+    <p class="prose">Cool project about frequencies.</p>
+
+    <!-- ================= PART 1 ================= -->
+    <section class="part">
+      <div class="kick">Part 1</div>
+      <h2>Fun with Filters</h2>
+      <div class="minwave" data-wave></div>
+
+      <!-- 1.1 -->
+      <div class="sub-h"><span class="n">1.1</span><h3>Convolutions from Scratch</h3><span class="pts">numpy only</span></div>
+      <p class="prose">My code used only numpy: the four for loops use simple indexing, and the two for loops make use of numpy vectorized operations. How it works is it slides the kernel over the image, calculates the sum of the multiplied values, and puts that as the answer. The box filter averages the values in the box, causing a blur; <code>Dx</code> looks at the horizontal change, finding vertical edges; <code>Dy</code> does a similar thing but finds horizontal edges. For padding I used <code>numpy.pad</code> (it defaults to constant 0 padding), which is how I deal with boundaries, and is the same as scipy's <code>convolve2d</code>. In comparison with <code>scipy.signal.convolve2d</code>: runtime-wise, the four-loop version is way slower, and the two-loop version is similar in speed (because of the vectorized operations). Scipy's convolve2d is way faster (use of compiled code and probably efficient vectorized operations), often at least 10x faster.</p>
+
+      <div class="code">
+        <div class="bar"><i></i><i></i><i></i><b>naiveConvolution — four loops</b></div>
+        <pre><code>def naiveConvolution(img,kernel):
+    #using same padding
+    kh,kw = kernel.shape
+    H,W = img.shape
+    ans = np.zeros(img.shape)
+    paddingW = (kw-1)//2
+    paddingH = (kh-1)//2
+    img = np.pad(img, ((paddingH, paddingH), (paddingW, paddingW)))
+
+
+    for y in range(H):
+        for x in range(W):
+            tempans=0
+            for j in range(kh):
+                for i in range(kw):
+                    tempans+=img[y+j][x+i]*kernel[j][i]
+            ans[y,x]=tempans
+    ans=np.array(ans)
+    return ans</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="bar"><i></i><i></i><i></i><b>optimizedConvolution — two loops</b></div>
+        <pre><code>def optimizedConvolution(img,kernel):
+    kh,kw = kernel.shape
+    H,W = img.shape
+    ans = np.zeros(img.shape)
+    paddingW = (kw-1)//2
+    paddingH = (kh-1)//2
+
+    img = np.pad(img, ((paddingH, paddingH), (paddingW, paddingW)))
+
+    for y in range(H):
+        for x in range(W):
+            ans[y,x]=np.sum(img[y:y+kh,x:x+kw]*kernel)
+    ans=np.array(ans)
+    return ans</code></pre>
+      </div>
+
+      <div class="shots" id="g-1-1"></div>
+
+      <!-- 1.2 -->
+      <div class="sub-h"><span class="n">1.2</span><h3>Finite Difference Operator</h3></div>
+      <p class="prose">I convolve with D_x and D_y to get the partial derivatives. I compute the gradient magnitude at each pixel using the formula sqrt(dx^2 + dy^2). This marks where the change in intensity is high, not necessarily the direction. Then I only select those above my threshold. I chose a threshold of 0.2, because even though there was still a little noise at the bottom, it keeps more of the edges of the buildings behind, which are lost at the next threshold.</p>
+      <div class="shots three" id="g-1-2-main"></div>
+      <div class="note">Chosen binarized edge image:</div>
+      <figure class="shot feature"><img loading="lazy" src="part1.2/cameramanThresh0.2.jpg" alt="chosen threshold 0.2"><figcaption>binarized edges · chosen threshold = 0.2</figcaption></figure>
+      <div class="note">Threshold sweep (used to pick the value):</div>
+      <div class="shots sweep" id="g-1-2-sweep"></div>
+
+      <!-- 1.3 -->
+      <div class="sub-h"><span class="n">1.3</span><h3>Derivative of Gaussian (DoG) Filter</h3></div>
+      <p class="prose">I built a 2D gaussian (5×5 kernel, sigma = 1.5 for approach (a) and sigma = 1 for the DoG in (b)) following the procedure mentioned in the instructions. In one approach I applied the kernel to the image and then dx and dy; in the single convolution I apply the gaussian to each and then convolve. What I notice is that, as you can see by the sweep, the noise gets removed very quickly after differentiating, at lower thresholds. Both the single convolution and the gaussian produce the same image (some nuance with padding, but regardless). This is because of the associativity of the operation, where the order doesn't really matter.</p>
+
+      <div class="card">
+        <h4>(a) Gaussian smoothing, then finite difference</h4>
+        <div class="shots three" id="g-1-3a-main"></div>
+        <figure class="shot feature"><img loading="lazy" src="part1.3a/cameramanThresh0.1.jpg" alt="DoG(a) chosen threshold 0.1"><figcaption>binarized edges · chosen threshold = 0.1</figcaption></figure>
+        <div class="note">Threshold sweep:</div>
+        <div class="shots sweep" id="g-1-3a-sweep"></div>
+      </div>
+
+      <div class="card">
+        <h4>(b) Single-convolution Derivative-of-Gaussian</h4>
+        <div class="note">DoG filters, visualized:</div>
+        <div class="shots two" id="g-1-3b-filters"></div>
+        <div class="shots three" id="g-1-3b-main"></div>
+        <figure class="shot feature"><img loading="lazy" src="part1.3b/cameramanThresh0.1.jpg" alt="DoG(b) chosen threshold 0.1"><figcaption>binarized edges · chosen threshold = 0.1</figcaption></figure>
+        <div class="note">Threshold sweep:</div>
+        <div class="shots sweep" id="g-1-3b-sweep"></div>
+      </div>
+
+    </section>
+
+    <!-- ================= PART 2 ================= -->
+    <section class="part">
+      <div class="kick">Part 2</div>
+      <h2>Fun with Frequencies</h2>
+      <div class="minwave" data-wave></div>
+
+      <!-- 2.1 -->
+      <div class="sub-h"><span class="n">2.1</span><h3>Image "Sharpening"</h3></div>
+      <p class="prose">We want to extract the high frequencies of the image (which supposedly correspond to detail). To get this we can blur the image with a gaussian kernel (I chose a 5×5 kernel with sigma = 1). You can then apply this back with alpha. When alpha gets high we see the features get exaggerated, but as it becomes too high we start to see weird artifacts appear.</p>
+
+      <div class="card">
+        <h4>Taj Mahal</h4>
+        <div class="shots three" id="g-2-1-taj-top"></div>
+        <div class="note">Sharpening amount sweep:</div>
+        <div class="shots" id="g-2-1-taj-sweep"></div>
+      </div>
+
+      <div class="card">
+        <h4>Evaluation: sharp &rarr; blurred &rarr; re-sharpened (LeCun)</h4>
+        <p class="prose">Sharpening the blurred image helps, but there are some details that were lost, like some wrinkles here and there in the shirt, etc. Sharpening can only exaggerate details that exist, and blurring removes some.</p>
+        <div class="shots three" id="g-2-1-lecun-top"></div>
+        <div class="note">Sharpening the original:</div>
+        <div class="shots" id="g-2-1-lecun-sharp"></div>
+        <div class="note">Re-sharpening the blurred version:</div>
+        <div class="shots" id="g-2-1-lecun-resharp"></div>
+      </div>
+
+      <!-- 2.2 -->
+      <div class="sub-h"><span class="n">2.2</span><h3>Hybrid Images</h3></div>
+      <p class="prose">Humans tend to see high frequencies up close but low frequencies from far away. This is the crux of the optical illusion. To do this we use the function to align the images; the low-frequency image is blurred and the high-frequency one is the impulse. For the low-frequency image, the energy captured by the FFT is more contained/constrained; for the high-pass FFT, the center is weaker, but everywhere else the other frequencies are kept. The hybrid combines both: we see Akhil in the center, while mine is on the outside. The sigmas are chosen by trial and error.</p>
+
+      <div class="card">
+        <h4>Full process · Aayan + Akhil <span class="pts">(my favorite)</span></h4>
+        <div class="note">Aligned inputs (low-freq source / high-freq source):</div>
+        <div class="shots two" id="g-2-2-fp-aligned"></div>
+        <div class="note">Log-magnitude FFTs of the aligned inputs:</div>
+        <div class="shots two" id="g-2-2-fp-fft"></div>
+        <div class="note">Filtered: low-pass / high-pass:</div>
+        <div class="shots two" id="g-2-2-fp-filt"></div>
+        <div class="note">Log-magnitude FFTs of the filtered images:</div>
+        <div class="shots two" id="g-2-2-fp-fftfilt"></div>
+        <p class="prose">The sigmas are chosen by trial and error.</p>
+        <div class="shots two" id="g-2-2-fp-result"></div>
+      </div>
+
+      <div class="card">
+        <h4>Derek + Nutmeg</h4>
+        <div class="shots three" id="g-2-2-dn"></div>
+      </div>
+
+      <div class="card">
+        <h4>Bear + Oski</h4>
+        <div class="shots three" id="g-2-2-bo"></div>
+      </div>
+
+      <!-- 2.3 -->
+      <div class="sub-h"><span class="n">2.3</span><h3>Gaussian &amp; Laplacian Stacks</h3></div>
+      <p class="prose">For the gaussian stack, level 0 is just the original image and each level after is the previous one blurred more, where I double the sigma each time (1, 2, 4, 8, 16). I don't downsample so everything stays the same size (this was specified in the spec). The laplacian stack is just the difference between two consecutive gaussian levels (L<sub>i</sub> = G<sub>i</sub> − G<sub>i+1</sub>), so each one grabs a single level of detail. The early levels have the fine edges and texture, the middle ones have coarser stuff, and the last level is just the final gaussian which holds the low frequency color and lighting (very important to the image). This is intuitive when we see how we subtract (i.e at each level we subtract ). If you add all the levels back up you get the original exactly. Since the laplacian levels have negative values too, I map zero to gray so you can see them, where brighter is positive and darker is negative.</p>
+      <div class="card">
+        <h4>Apple · Gaussian stack</h4><div class="shots six" id="g-2-3-ag"></div>
+        <h4>Apple · Laplacian stack</h4><div class="shots six" id="g-2-3-al"></div>
+        <h4>Orange · Gaussian stack</h4><div class="shots six" id="g-2-3-og"></div>
+        <h4>Orange · Laplacian stack</h4><div class="shots six" id="g-2-3-ol"></div>
+      </div>
+
+      <!-- 2.4 -->
+      <div class="sub-h"><span class="n">2.4</span><h3>Multiresolution Blending (the Oraple)</h3></div>
+      <p class="prose">To blend I make a laplacian stack for each image and a gaussian stack for the mask, and at every level I combine them as G<sub>i</sub>(mask)·L<sub>i</sub>(A) + (1 − G<sub>i</sub>(mask))·L<sub>i</sub>(B), then add all the levels up for the final image. This works because when the mask is sharper it corresponds to the levels that have the finer details, so those stay within their boundaries; but as the mask gets blurrier we get to the lower levels which (as mentioned before) correlate with stuff like lighting and base color, which makes those transition smoothly and gives a nice blend.</p>
+
+      <div class="card">
+        <h4>The Oraple</h4>
+        <figure class="shot feature"><img loading="lazy" src="part2.4-indepth/reconstructed.jpg" alt="oraple"><figcaption>apple + orange · vertical seam</figcaption></figure>
+        <div class="note">Recreation of Szeliski Figure 3.42 (masked Laplacians per level, combined):</div>
+        <div class="shots" id="g-2-4-figure"></div>
+        <div class="note">Blend process (masks, masked Laplacians, reconstructions):</div>
+        <div class="shots" id="g-2-4-process"></div>
+        <p class="prose">Here I show the gaussian mask and the masked apple and orange laplacian bands at levels 0, 2, and 4, their blended sums, and the reconstructed halves that add up to the oraple.</p>
+      </div>
+
+      <p class="prose">For my own blends, the earth and moon one uses a vertical mask just like the oraple: Earth is the left half and the Moon is the right half, and since both are the same size and lined up they merge into one planet that is half Earth and half Moon with a smooth seam down the middle. The sphere and campanile one uses an irregular dome-shaped mask (the outline of the sphere), so the yellow sphere gets pulled into the campanile scene, and because the mask is blurred at the coarse levels it settles in instead of looking like a hard cutout.</p>
+
+      <div class="card">
+        <h4>Custom blend 1 · Earth + Moon <span class="pts">(vertical seam)</span></h4>
+        <div class="shots" id="g-2-4-moon"></div>
+      </div>
+
+      <div class="card">
+        <h4>Custom blend 2 · Sphere + Campanile <span class="pts">(irregular mask)</span></h4>
+        <div class="shots" id="g-2-4-third"></div>
+      </div>
+    </section>
+
+    <!-- closing -->
+    <section class="part">
+      <div class="kick">Reflection</div>
+      <h2>Most Important Thing Learned</h2>
+      <div class="minwave" data-wave></div>
+      <p class="prose">I learned how important (and relatively simple to work with) frequencies are. We saw that with gaussians we can make edge detection better. By also looking at the impulse we can add details to images (exaggerate them). This also unlocks seamless blending. The ability to look at and isolate these frequencies gives us so much control over an image. This result is very cool to me, and I definitely want to play with using neural nets to do stuff with frequencies to get some generative properties.</p>
+    </section>
+  </div>
+
+  <script>
+    // ---- soundwave graphics ----
+    function makeWave(el, n, maxH, minH){
+      let html='';
+      for(let i=0;i<n;i++){
+        const t=i/(n-1);
+        // smooth symmetric envelope with layered sines -> elegant waveform
+        const env=Math.sin(Math.PI*t);
+        const detail=0.55+0.45*Math.abs(Math.sin(t*22)+0.5*Math.sin(t*9+1));
+        const h=minH+(maxH-minH)*Math.max(0.08,env*detail);
+        html+=`<span style="height:${h.toFixed(1)}px"></span>`;
+      }
+      el.innerHTML=html;
+    }
+    const hw=document.getElementById('hero-wave'); if(hw) makeWave(hw,72,66,4);
+    document.querySelectorAll('[data-wave]').forEach(el=>makeWave(el,80,14,2));
+
+    // ---- image galleries ----
+    const R=(id,html)=>{const e=document.getElementById(id); if(e) e.innerHTML=html;};
+    const fig=(src,cap)=>`<figure class="shot"><img loading="lazy" src="${src}" alt="${cap||''}">${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;
+    const row=arr=>arr.map(a=>fig(a[0],a[1])).join('');
+
+    R('g-1-1', row([
+      ['part1.1/me_grayscale.jpg','input · grayscale'],
+      ['part1.1/box.jpg','9×9 box filter'],
+      ['part1.1/dx.jpg','D_x'],
+      ['part1.1/dy.jpg','D_y'],
+    ]));
+
+    R('g-1-2-main', row([
+      ['part1.2/dx.jpg','∂/∂x'],
+      ['part1.2/dy.jpg','∂/∂y'],
+      ['part1.2/magnitude.jpg','gradient magnitude'],
+    ]));
+    const THR=['0.05','0.1','0.15','0.2','0.25','0.3','0.35','0.4','0.45','0.5'];
+    const sweep=dir=>row(THR.map(v=>[`${dir}/cameramanThresh${v}.jpg`,`thr ${v}`]));
+    R('g-1-2-sweep', sweep('part1.2'));
+
+    R('g-1-3a-main', row([
+      ['part1.3a/dx.jpg','∂/∂x (smoothed)'],
+      ['part1.3a/dy.jpg','∂/∂y (smoothed)'],
+      ['part1.3a/magnitude.jpg','gradient magnitude'],
+    ]));
+    R('g-1-3a-sweep', sweep('part1.3a'));
+
+    R('g-1-3b-filters', row([
+      ['part1.3b/gaussdx.jpg','DoG filter · x'],
+      ['part1.3b/gaussdy.jpg','DoG filter · y'],
+    ]));
+    R('g-1-3b-main', row([
+      ['part1.3b/dx.jpg','DoG ∂/∂x'],
+      ['part1.3b/dy.jpg','DoG ∂/∂y'],
+      ['part1.3b/magnitude.jpg','gradient magnitude'],
+    ]));
+    R('g-1-3b-sweep', sweep('part1.3b'));
+
+    R('g-2-1-taj-top', row([
+      ['input/taj.jpg','original'],
+      ['part2.1/taj_blur.jpg','blurred (low-pass)'],
+      ['part2.1/taj_HighF.jpg','high frequencies'],
+    ]));
+    R('g-2-1-taj-sweep', row([1,2,3,4,5].map(i=>[`part2.1/taj_sharp_${i}.jpg`,`amount ${i}`])));
+
+    R('g-2-1-lecun-top', row([
+      ['input/lecun.jpg','original (sharp)'],
+      ['part2.1/lecun_blur.jpg','blurred'],
+      ['part2.1/lecun_HighF.jpg','high frequencies'],
+    ]));
+    R('g-2-1-lecun-sharp', row([1,2,3,4,5].map(i=>[`part2.1/lecun_sharp_${i}.jpg`,`sharpen ${i}`])));
+    R('g-2-1-lecun-resharp', row([1,2,3,4,5].map(i=>[`part2.1/lecun_resharp_${i}.jpg`,`re-sharpen ${i}`])));
+
+    // full process — Aayan + Akhil (favorite). aayan = HF, akhil = LF
+    R('g-2-2-fp-aligned', row([
+      ['aayan1akhil1/akhil1_aligned_lf.jpg','Akhil · aligned (LF source)'],
+      ['aayan1akhil1/aayan1_aligned_hf.jpg','Aayan · aligned (HF source)'],
+    ]));
+    R('g-2-2-fp-fft', row([
+      ['aayan1akhil1/akhil1_aligned_fft_lf.jpg','FFT · Akhil'],
+      ['aayan1akhil1/aayan1_aligned_fft_hf.jpg','FFT · Aayan'],
+    ]));
+    R('g-2-2-fp-filt', row([
+      ['aayan1akhil1/akhil1_aligned_lf_pass.jpg','low-pass (Akhil)'],
+      ['aayan1akhil1/aayan1_aligned_hf_pass.jpg','high-pass (Aayan)'],
+    ]));
+    R('g-2-2-fp-fftfilt', row([
+      ['aayan1akhil1/akhil1_aligned_fft_lf_pass.jpg','FFT · low-pass'],
+      ['aayan1akhil1/aayan1_aligned_fft_hf_pass.jpg','FFT · high-pass'],
+    ]));
+    R('g-2-2-fp-result', row([
+      ['aayan1akhil1/hybrid_3_8.jpg','hybrid'],
+      ['aayan1akhil1/hybrid_fft.jpg','hybrid · FFT'],
+    ]));
+
+    // other two — aligned grayscale inputs + final hybrid
+    R('g-2-2-dn', row([
+      ['nutmegDerekPicture/DerekPicture_aligned_lf.jpg','Derek · aligned (LF)'],
+      ['nutmegDerekPicture/nutmeg_aligned_hf.jpg','Nutmeg · aligned (HF)'],
+      ['nutmegDerekPicture/hybrid_8_10.jpg','hybrid'],
+    ]));
+    R('g-2-2-bo', row([
+      ['bearoski/oski_aligned_lf.jpg','Oski · aligned (LF)'],
+      ['bearoski/bear_aligned_hf.jpg','Bear · aligned (HF)'],
+      ['bearoski/hybrid_3_8.jpg','hybrid'],
+    ]));
+
+    const stack=dir=>row([0,1,2,3,4,5].map(i=>[`${dir}/${i}.jpg`,`level ${i}`]));
+    R('g-2-3-ag', stack('part2.3/apple-gaussian'));
+    R('g-2-3-al', stack('part2.3/apple-laplacian'));
+    R('g-2-3-og', stack('part2.3/orange-gaussian'));
+    R('g-2-3-ol', stack('part2.3/orange-laplacian'));
+
+    const LV=[0,1,2,3,4,5];
+    const figRow=(prefix,label)=>LV.map(i=>[`part2.3-ol/figure/${prefix}_${i}.jpg`,`${label} ${i}`]);
+    R('g-2-4-figure', row([].concat(figRow('apple','apple'),figRow('orange','orange'),figRow('blends','blend'))));
+
+    R('g-2-4-process', row([
+      ['part2.4-indepth/mask0.jpg','mask · lvl 0'],
+      ['part2.4-indepth/mask2.jpg','mask · lvl 2'],
+      ['part2.4-indepth/mask4.jpg','mask · lvl 4'],
+      ['part2.4-indepth/masked_apple_0.jpg','apple L · lvl 0'],
+      ['part2.4-indepth/masked_apple_2.jpg','apple L · lvl 2'],
+      ['part2.4-indepth/masked_apple_4.jpg','apple L · lvl 4'],
+      ['part2.4-indepth/masked_orange.jpg','orange (masked)'],
+      ['part2.4-indepth/masked_blends0.jpg','blend · lvl 0'],
+      ['part2.4-indepth/masked_blends2.jpg','blend · lvl 2'],
+      ['part2.4-indepth/masked_blends4.jpg','blend · lvl 4'],
+      ['part2.4-indepth/reconstructed_apple.jpg','reconstructed apple'],
+      ['part2.4-indepth/reconstructed_orange.jpg','reconstructed orange'],
+    ]));
+
+    R('g-2-4-moon', row([
+      ['input/earth.jpg','earth'],
+      ['input/moon2.jpg','moon'],
+      ['part2.4-moon/mask.jpg','mask'],
+      ['part2.4-moon/reconstructed.jpg','blended'],
+    ]));
+    R('g-2-4-third', row([
+      ['input/sphere.jpg','sphere'],
+      ['input/campanile.jpg','campanile'],
+      ['input/fourthmask.jpg','mask'],
+      ['part2.4-third/reconstructed.jpg','blended'],
+    ]));
+  </script>
+</body>
+</html>

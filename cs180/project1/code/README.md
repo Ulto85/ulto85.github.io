@@ -8,3 +8,5 @@
 
 This populates the `singleScale/` and `multiScale/` output folders and writes
 `metadata.json` with the (x, y) alignment offsets for every image.
+
+Data should go in a folder named `CS180_fa2026_proj1_data/`
