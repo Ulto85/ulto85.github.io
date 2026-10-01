@@ -186,7 +186,7 @@
 
       <!-- 1.3 -->
       <div class="sub-h"><span class="n">1.3</span><h3>Derivative of Gaussian (DoG) Filter</h3></div>
-      <p class="prose">I built a 2D gaussian (5×5 kernel, sigma = 1.5 for both approaches, so it is a fair comparison) following the procedure mentioned in the instructions. In one approach I applied the kernel to the image and then dx and dy; in the single convolution I apply the gaussian to each and then convolve. What I notice is that, as you can see by the sweep, the noise gets removed very quickly after differentiating, at lower thresholds. Both the single convolution and the gaussian produce the same image (some nuance with padding, but regardless). This is because of the associativity of the operation, where the order doesn't really matter.</p>
+      <p class="prose">I built a 2D gaussian (5×5 kernel, sigma = 1.5 for approach (a) and sigma = 1 for the DoG in (b)) following the procedure mentioned in the instructions. In one approach I applied the kernel to the image and then dx and dy; in the single convolution I apply the gaussian to each and then convolve. What I notice is that, as you can see by the sweep, the noise gets removed very quickly after differentiating, at lower thresholds. Both the single convolution and the gaussian produce the same image (some nuance with padding, but regardless). This is because of the associativity of the operation, where the order doesn't really matter.</p>
 
       <div class="card">
         <h4>(a) Gaussian smoothing, then finite difference</h4>

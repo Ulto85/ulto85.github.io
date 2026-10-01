@@ -1,0 +1,1 @@
+cd into the code folder, if not already, and then populate the input folder with the appropriate images. (remember to install the packages that are used with pip install) Then look at parts.py (each part is its own function) and you can run it one by one. (part2_2 on top isn't meant to be run, run part2_2_real instead)

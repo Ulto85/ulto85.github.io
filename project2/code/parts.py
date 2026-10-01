@@ -6,8 +6,6 @@ import cv2
 import matplotlib.pyplot as plt
 from align_image_code import align_images
 import os 
-import scipy.signal
-import time
 def naiveConvolution(img,kernel):
     #using same padding
     kh,kw = kernel.shape
@@ -43,23 +41,6 @@ def optimizedConvolution(img,kernel):
     ans=np.array(ans)
     return ans
 # First load images
-def comparison():
-    im = skio.imread("input/cameraman.png", as_gray=True)
-    box = np.ones((9,9)) / 81
-    dx = np.array([[-1,0,1]])
-    dy = np.array([[-1],[0],[1]])
-    for kernel in [box, dx, dy]:
-        start = time.time()
-        naiveConvolution(im, kernel)
-        print("naive", time.time() - start)
-
-        start = time.time()
-        optimizedConvolution(im, kernel)
-        print("optimized", time.time() - start)
-
-        start = time.time()
-        scipy.signal.convolve2d(im, kernel, mode="same")
-        print("scipy", time.time() - start)
 def part2_2(fp1,fp2,s1,s2):
     # high sf
     #im1 = plt.imread('./DerekPicture.jpg') / 255.
@@ -190,7 +171,7 @@ def part1_3_a():
         final = magnitude>t
         plt.imsave(f"part1.3a/cameramanThresh{t}.jpg",final,cmap='gray')
 def part1_3_b():
-    kernel =  cv2.getGaussianKernel(5,1.5)
+    kernel =  cv2.getGaussianKernel(5,1)
     kernel = np.outer(kernel,kernel.T)
     im = skio.imread("input/cameraman.png",as_gray=True)
     im=optimizedConvolution(im,kernel)
@@ -486,6 +467,6 @@ def part2_4_third():
     
     
     plt.imsave(f"part2.4-third/reconstructed.jpg",np.clip(np.sum(blends,axis=0),0,1)) 
-part1_3_b()
+part2_4_third()
 
 
