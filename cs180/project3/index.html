@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 3: Fun with Flow Models</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- KaTeX for equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}]});"></script>
+
+  <style>
+    :root{
+      --canvas:#f3ebdd; --canvas-2:#efe5d3; --ink:#2a2420; --ink-2:#5e5248; --faint:#8c7f72;
+      --ultramarine:#2b4c9b; --alizarin:#b0263a; --cadmium:#e0a019; --sap:#4f7a3a;
+      --sienna:#a0522d; --prussian:#1f3b4d; --violet:#6b4b8a;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; }
+    body{
+      font-family:"Lora",Georgia,serif; color:var(--ink); line-height:1.7; font-size:1.04rem;
+      background-color:var(--canvas);
+      /* primed-canvas weave texture */
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    }
+    /* soft watercolor washes in the corners */
+    .wash{ position:fixed; z-index:-1; border-radius:50%; filter:blur(70px); opacity:.33; pointer-events:none; }
+    .wash.a{ width:520px; height:420px; background:var(--ultramarine); top:-160px; left:-180px; }
+    .wash.b{ width:460px; height:420px; background:var(--alizarin); top:30%; right:-220px; opacity:.20; }
+    .wash.c{ width:520px; height:460px; background:var(--cadmium); bottom:-200px; left:10%; opacity:.24; }
+
+    .wrap{ max-width:1100px; margin:0 auto; padding:0 26px 140px; }
+    a{ color:inherit; }
+    .breadcrumb{ padding:22px 0 0; font-family:"Caveat",cursive; font-size:1.3rem; color:var(--ink-2); }
+    .breadcrumb a{ text-decoration:none; border-bottom:1.5px solid rgba(42,36,32,.25); }
+    .breadcrumb a:hover{ border-color:var(--ink); }
+
+    /* ---------- HERO ---------- */
+    header.hero{ text-align:center; padding:60px 0 20px; }
+    .hero .course{ font-family:"Caveat",cursive; font-size:1.55rem; color:var(--sienna); }
+    .hero h1{ font-family:"Fraunces",serif; font-weight:800; font-size:clamp(2.4rem,7vw,4.6rem);
+      line-height:1.02; margin:6px 0 0; letter-spacing:-.01em; }
+    .hero h1 .paint{ background:linear-gradient(100deg,var(--ultramarine),var(--violet) 45%,var(--alizarin));
+      -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hero .sub{ font-style:italic; color:var(--ink-2); margin-top:12px; font-size:1.12rem; }
+    .stroke{ display:block; margin:18px auto 0; width:min(460px,80%); height:22px; }
+
+    /* paint-tube swatch nav */
+    .palette{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:34px 0 10px; }
+    .palette a{ text-decoration:none; display:flex; align-items:center; gap:8px; font-family:"Caveat",cursive;
+      font-size:1.2rem; color:var(--ink-2); padding:3px 12px 3px 4px; border-radius:99px; background:rgba(255,255,255,.45);
+      border:1px solid rgba(42,36,32,.12); transition:transform .15s; }
+    .palette a:hover{ transform:translateY(-2px); }
+    .palette i{ width:20px; height:20px; border-radius:50% 46% 52% 48%/48% 54% 46% 52%; display:inline-block;
+      box-shadow:inset -3px -3px 0 rgba(0,0,0,.12); }
+
+    /* ---------- PART / SECTION HEADERS ---------- */
+    .part-head{ margin:90px 0 10px; text-align:center; }
+    .part-head .lbl{ font-family:"Caveat",cursive; font-size:1.5rem; color:var(--faint); }
+    .part-head h2{ font-family:"Fraunces",serif; font-weight:800; font-size:clamp(1.8rem,4.6vw,2.8rem); margin:0; }
+
+    section.sec{ margin:64px 0 0; --c:var(--ultramarine); }
+    .sec-h{ display:flex; align-items:center; gap:16px; margin-bottom:6px; }
+    .daub{ flex:0 0 auto; width:54px; height:54px; display:grid; place-items:center; color:#fff;
+      font-family:"Fraunces",serif; font-weight:800; font-size:1.05rem; background:var(--c);
+      border-radius:56% 44% 52% 48%/47% 55% 45% 53%; box-shadow:inset -5px -6px 0 rgba(0,0,0,.14), 0 3px 10px rgba(0,0,0,.12); }
+    .sec-h h3{ font-family:"Fraunces",serif; font-weight:600; font-size:clamp(1.35rem,3vw,1.85rem); margin:0; line-height:1.15; }
+    .sec-h h3 small{ display:block; font-family:"Caveat",cursive; font-weight:500; font-size:1.15rem; color:var(--faint); }
+    .underline{ height:10px; width:220px; margin:4px 0 22px 70px; }
+    .underline path{ stroke:var(--c); }
+
+    h4.subsec{ font-family:"Fraunces",serif; font-weight:600; font-size:1.2rem; margin:40px 0 4px; color:var(--c); }
+
+    /* ---------- TEXT ---------- */
+    .prose{ margin:12px 0; }
+    .eq{ background:rgba(255,253,248,.75); border-left:5px solid var(--c); border-radius:4px 10px 10px 4px;
+      padding:6px 20px; margin:16px 0; box-shadow:0 1px 3px rgba(0,0,0,.05); overflow-x:auto; }
+    .facts{ display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 4px; }
+    .facts span{ font-size:.86rem; background:rgba(255,255,255,.55); border:1px solid rgba(42,36,32,.14);
+      border-radius:99px; padding:3px 12px; color:var(--ink-2); }
+    .facts b{ color:var(--ink); font-weight:600; }
+    .ph{ border:2px dashed rgba(94,82,72,.35); border-radius:12px; background:rgba(255,255,255,.35);
+      padding:14px 18px; margin:16px 0; color:var(--ink-2); font-style:italic; }
+    .ph::before{ content:"placeholder"; font-family:"Caveat",cursive; font-style:normal; font-size:1.15rem;
+      color:var(--c); margin-right:10px; }
+
+    /* ---------- FIGURES (canvas boards) ---------- */
+    figure.board{ margin:20px 0; }
+    figure.board .canvas{ background:#fffdf8; padding:12px; border-radius:3px;
+      box-shadow:0 1px 0 rgba(0,0,0,.04), 0 10px 26px rgba(60,40,20,.16), inset 0 0 0 1px rgba(42,36,32,.08);
+      position:relative; }
+    figure.board .canvas::after{ content:""; position:absolute; left:6%; right:6%; bottom:-10px; height:12px;
+      background:radial-gradient(ellipse at center, rgba(60,40,20,.18), transparent 70%); z-index:-1; }
+    figure.board img{ display:block; width:100%; height:auto; }
+    figure.board figcaption{ font-family:"Caveat",cursive; font-size:1.3rem; color:var(--ink-2); text-align:center; margin-top:10px; line-height:1.25; }
+    figure.board figcaption em{ color:var(--c); font-style:normal; }
+    figure.board.narrow{ max-width:520px; margin-left:auto; margin-right:auto; }
+    figure.board.tall{ max-width:620px; margin-left:auto; margin-right:auto; }
+
+    .row{ display:grid; gap:22px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+    .pair-hybrid{ display:flex; align-items:flex-end; justify-content:center; gap:30px; flex-wrap:wrap; }
+    .pair-hybrid figure{ margin:0; }
+    .pair-hybrid .full{ width:min(420px,100%); }
+    .pair-hybrid .small img{ width:64px; height:64px; }
+    a.zoom{ display:block; cursor:zoom-in; }
+
+    .board.plot{ max-width:760px; margin-left:auto; margin-right:auto; }
+    .row.two{ grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr)); }
+    .palette .sep{ flex-basis:100%; height:0; }
+    .palette .tag{ font-family:"Caveat",cursive; font-size:1.2rem; color:var(--faint); align-self:center; }
+    .part-banner{ margin:130px 0 0; text-align:center; }
+    .part-banner .lbl{ font-family:"Caveat",cursive; font-size:1.7rem; color:var(--sienna); }
+    .part-banner h2{ font-family:"Fraunces",serif; font-weight:800; font-size:clamp(2rem,6vw,3.6rem); margin:0; line-height:1.05; }
+    .part-banner h2 .paint{ background:linear-gradient(100deg,var(--sap),var(--prussian) 50%,var(--ultramarine));
+      -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+    .divider{ width:100%; height:26px; margin:80px 0 0; opacity:.55; }
+
+    @media (max-width:600px){ .underline{ margin-left:0; } .sec-h{ gap:12px; } .daub{ width:46px; height:46px; } }
+  </style>
+</head>
+
+<body>
+  <div class="wash a"></div><div class="wash b"></div><div class="wash c"></div>
+
+  <div class="wrap">
+    <p class="breadcrumb"><a href="../">&larr; CS 180</a> &nbsp;·&nbsp; <a href="../../">Home</a></p>
+
+    <header class="hero">
+      <div class="course">CS 180 · Project 3 · Parts A &amp; B</div>
+      <h1>Fun with <span class="paint">Flow Models</span></h1>
+      <div class="sub">Painting images out of noise with a pretrained text-to-image flow model, then training one from scratch on MNIST.</div>
+      <svg class="stroke" viewBox="0 0 460 22" preserveAspectRatio="none"><path d="M4 14 C 80 4, 160 20, 240 11 S 380 4, 456 12" fill="none" stroke="#a0522d" stroke-width="5" stroke-linecap="round" opacity=".7"/></svg>
+
+      <nav class="palette">
+        <span class="tag">Part A</span>
+        <a href="#s1-1"><i style="background:var(--ultramarine)"></i>1.1</a>
+        <a href="#s1-2"><i style="background:var(--prussian)"></i>1.2</a>
+        <a href="#s1-3"><i style="background:var(--sap)"></i>1.3</a>
+        <a href="#s1-4"><i style="background:var(--violet)"></i>1.4</a>
+        <a href="#s1-5"><i style="background:var(--sienna)"></i>1.5</a>
+        <a href="#s1-6"><i style="background:var(--alizarin)"></i>1.6</a>
+        <a href="#s2-1"><i style="background:var(--cadmium)"></i>2.1</a>
+        <a href="#s3-1"><i style="background:var(--ultramarine)"></i>3.1</a>
+        <a href="#s3-2"><i style="background:var(--sap)"></i>3.2</a>
+        <a href="#s3-3"><i style="background:var(--violet)"></i>3.3</a>
+        <a href="#s3-4"><i style="background:var(--alizarin)"></i>3.4</a>
+        <span class="sep"></span>
+        <span class="tag">Part B</span>
+        <a href="#b1-1"><i style="background:var(--prussian)"></i>1.1</a>
+        <a href="#b1-2"><i style="background:var(--sap)"></i>1.2</a>
+        <a href="#b2-1"><i style="background:var(--violet)"></i>2.1</a>
+        <a href="#b2-2"><i style="background:var(--sienna)"></i>2.2</a>
+        <a href="#b2-3"><i style="background:var(--alizarin)"></i>2.3</a>
+        <a href="#b2-4"><i style="background:var(--cadmium)"></i>2.4</a>
+        <a href="#b2-5"><i style="background:var(--ultramarine)"></i>2.5</a>
+        <a href="#b2-6"><i style="background:var(--sap)"></i>2.6</a>
+      </nav>
+    </header>
+
+    <p class="prose">Part A is just exploring different aspects of flow matching, using a pretrained text-to-image flow model (PixNerd).</p>
+    <div class="facts">
+      <span>model <b>PixNerd-XXL-P16-T2I</b></span>
+      <span>images <b>512 × 512</b></span>
+      <span>seed <b>180</b></span>
+      <span>Euler step <b>h = 0.02</b></span>
+      <span>CFG weight <b>w = 7</b></span>
+      <span>prompt <b>“a high quality photo”</b></span>
+    </div>
+    <div class="eq">$$x_t = (1-t)\,\epsilon + t\,x_1,\qquad \epsilon\sim\mathcal{N}(0,I),\qquad t=0 \text{ is noise},\; t=1 \text{ is clean}$$</div>
+
+    <!-- ============ SECTION 1 ============ -->
+    <div class="part-head"><div class="lbl">Section 1</div><h2>Visualizing Training &amp; Sampling</h2></div>
+
+    <section class="sec" id="s1-1" style="--c:var(--ultramarine)">
+      <div class="sec-h"><div class="daub">1.1</div><h3>Constructing Noisy Training Inputs</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$x_t = (1-t)\,\epsilon + t\,x_1$$</div>
+      <p class="prose">To make a noisy input I mix my image \(x_1\) with Gaussian noise \(\epsilon\) along a straight line, \(x_t = (1-t)\epsilon + t x_1\), using the same noise sample for every t. At t = 0.25 you can barely see my face, yet at t = 0.75 my face is mostly visible.</p>
+      <figure class="board"><a class="zoom" href="images/1-1_noisy_inputs.jpg"><div class="canvas"><img loading="lazy" src="images/1-1_noisy_inputs.jpg" alt="noisy inputs"></div></a>
+        <figcaption>original, then <em>t = 0.25 · 0.50 · 0.75</em> with the same noise sample</figcaption></figure>
+    </section>
+
+    <section class="sec" id="s1-2" style="--c:var(--prussian)">
+      <div class="sec-h"><div class="daub">1.2</div><h3>Classical Denoising</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$\hat{x}_1 = G_\sigma * \frac{x_t}{t},\qquad \sigma \in \{1,2,4,8,16\}\ \text{chosen by lowest MSE}$$</div>
+      <p class="prose">As a classical baseline I divide \(x_t\) by t to undo the scaling, then Gaussian blur it, trying σ ∈ {1, 2, 4, 8, 16} and keeping the one with the lowest MSE. At t = 0.25 it's still blurry and you can't see much (big colored blotches), while at t = 0.75 the blur basically clears the noise. The best σ decreases because with less noise, the low-pass filter can use a smaller and smaller σ to get rid of unwanted high-frequency things like noise (since it's less apparent). With more noise, you need more blur to try to remove it.</p>
+      <div class="row">
+        <figure class="board"><a class="zoom" href="images/1-2_blur_t025.jpg"><div class="canvas"><img loading="lazy" src="images/1-2_blur_t025.jpg" alt="blur t=0.25"></div></a><figcaption><em>t = 0.25</em> · best σ = 8</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/1-2_blur_t050.jpg"><div class="canvas"><img loading="lazy" src="images/1-2_blur_t050.jpg" alt="blur t=0.50"></div></a><figcaption><em>t = 0.50</em> · best σ = 4</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/1-2_blur_t075.jpg"><div class="canvas"><img loading="lazy" src="images/1-2_blur_t075.jpg" alt="blur t=0.75"></div></a><figcaption><em>t = 0.75</em> · best σ = 2</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="sec" id="s1-3" style="--c:var(--sap)">
+      <div class="sec-h"><div class="daub">1.3</div><h3>One-Step Denoising</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$\hat{x}_1 = x_t + (1-t)\,v_\theta(x_t, t, c)$$</div>
+      <p class="prose">Here the model predicts the velocity once, and I jump straight to the end with \(\hat{x}_1 = x_t + (1-t)v_\theta\). At t = 0.25 it doesn't look like me, while at t = 0.75 it's pretty close to me (t = 0.5 also gets somewhat close).</p>
+      <figure class="board"><a class="zoom" href="images/1-3_onestep_t025.jpg"><div class="canvas"><img loading="lazy" src="images/1-3_onestep_t025.jpg" alt="one step t=0.25"></div></a><figcaption>original · noisy · one step &nbsp;at <em>t = 0.25</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/1-3_onestep_t050.jpg"><div class="canvas"><img loading="lazy" src="images/1-3_onestep_t050.jpg" alt="one step t=0.50"></div></a><figcaption>original · noisy · one step &nbsp;at <em>t = 0.50</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/1-3_onestep_t075.jpg"><div class="canvas"><img loading="lazy" src="images/1-3_onestep_t075.jpg" alt="one step t=0.75"></div></a><figcaption>original · noisy · one step &nbsp;at <em>t = 0.75</em></figcaption></figure>
+    </section>
+
+    <section class="sec" id="s1-4" style="--c:var(--violet)">
+      <div class="sec-h"><div class="daub">1.4</div><h3>Visualizing Velocity</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$v_{gt} = x_1 - \epsilon,\qquad (1-t)\,v_{gt} = x_1 - x_t,\qquad E_t = \sqrt{\operatorname{mean}_{RGB}\!\big[(1-t)(\hat{v}_t - v_{gt})\big]^2}$$</div>
+      <p class="prose">Each row shows the noisy image, the predicted update \((1-t)\hat{v}\), the ground-truth update \((1-t)v_{gt} = x_1 - x_t\), and the per-pixel RGB RMS error between them. At t = 0.25 the error mostly shows the edges and features, so most of the error lies in the face. As we get to t = 0.75 the error map is basically black and shows little error.</p>
+      <figure class="board narrow"><a class="zoom" href="images/1-0_own_image.jpg"><div class="canvas"><img loading="lazy" src="images/1-0_own_image.jpg" alt="original"></div></a><figcaption>the original image</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/1-4_velocity_t025.jpg"><div class="canvas"><img loading="lazy" src="images/1-4_velocity_t025.jpg" alt="velocity t=0.25"></div></a><figcaption>noisy · predicted update · ground-truth update · error &nbsp;at <em>t = 0.25</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/1-4_velocity_t050.jpg"><div class="canvas"><img loading="lazy" src="images/1-4_velocity_t050.jpg" alt="velocity t=0.50"></div></a><figcaption>noisy · predicted update · ground-truth update · error &nbsp;at <em>t = 0.50</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/1-4_velocity_t075.jpg"><div class="canvas"><img loading="lazy" src="images/1-4_velocity_t075.jpg" alt="velocity t=0.75"></div></a><figcaption>noisy · predicted update · ground-truth update · error &nbsp;at <em>t = 0.75</em></figcaption></figure>
+    </section>
+
+    <section class="sec" id="s1-5" style="--c:var(--sienna)">
+      <div class="sec-h"><div class="daub">1.5</div><h3>Iterative Denoising with Euler Sampling</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$x_{t+h} = x_t + h\,v_\theta(x_t, t, c),\qquad h = 0.02,\ \text{starting from } t = 0.50\ (25\ \text{updates})$$</div>
+      <p class="prose">Instead of one big jump, Euler sampling takes small steps of h = 0.02, re-predicting the velocity each time, so going from t = 0.5 to 1 takes 25 updates. Comparing all three on the same input: blur is arguably the worst (artifacts, etc.), one step is somewhat ok, but Euler maintains more of the actual features and looks closer to the original image.</p>
+      <figure class="board"><a class="zoom" href="images/1-5_trajectory.jpg"><div class="canvas"><img loading="lazy" src="images/1-5_trajectory.jpg" alt="Euler trajectory"></div></a><figcaption>the Euler trajectory, every 5th update: <em>t = 0.50 · 0.60 · 0.70 · 0.80 · 0.90 · 1.00</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/1-5_comparison.jpg"><div class="canvas"><img loading="lazy" src="images/1-5_comparison.jpg" alt="comparison"></div></a><figcaption>original · blur · one step · Euler &nbsp;on the same <em>t = 0.50</em> input</figcaption></figure>
+    </section>
+
+    <section class="sec" id="s1-6" style="--c:var(--alizarin)">
+      <div class="sec-h"><div class="daub">1.6</div><h3>Generating Images from Noise</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <p class="prose">Starting from pure noise at t = 0 and running all 50 Euler updates with the prompt "a high quality photo" generates images from scratch. These samples look really distorted (they go close to some semblance of the center of the human distribution, which is odd).</p>
+      <figure class="board"><a class="zoom" href="images/1-6_samples.jpg"><div class="canvas"><img loading="lazy" src="images/1-6_samples.jpg" alt="samples"></div></a><figcaption>five samples, seeds <em>180 – 184</em>, “a high quality photo”</figcaption></figure>
+    </section>
+
+    <!-- ============ SECTION 2 ============ -->
+    <div class="part-head"><div class="lbl">Section 2</div><h2>Conditional Generation &amp; Guidance</h2></div>
+
+    <section class="sec" id="s2-1" style="--c:var(--cadmium)">
+      <div class="sec-h"><div class="daub">2.1</div><h3>Classifier-Free Guidance</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$v_{cfg} = v_c + w\,(v_c - v_u),\qquad w = 7,\quad v_u \text{ uses the empty prompt}$$</div>
+      <p class="prose">Classifier-free guidance runs the model twice per step, once with the prompt \(v_c\) and once with the empty prompt \(v_u\), and pushes further in the direction of the prompt with w = 7. Using the same starting noises as 1.6, CFG makes them look much better: they have fewer artifacts and look human, as opposed to the previous ones.</p>
+      <figure class="board"><a class="zoom" href="images/2-1_cfg_samples.jpg"><div class="canvas"><img loading="lazy" src="images/2-1_cfg_samples.jpg" alt="cfg samples"></div></a><figcaption>with guidance: seeds <em>180 – 184</em>, w = 7</figcaption></figure>
+      <h4 class="subsec">Without vs. with guidance</h4>
+      <div class="row">
+        <figure class="board"><a class="zoom" href="images/1-6_samples.jpg"><div class="canvas"><img loading="lazy" src="images/1-6_samples.jpg" alt="no cfg"></div></a><figcaption>no guidance (1.6)</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/2-1_cfg_samples.jpg"><div class="canvas"><img loading="lazy" src="images/2-1_cfg_samples.jpg" alt="cfg"></div></a><figcaption>CFG, <em>w = 7</em></figcaption></figure>
+      </div>
+    </section>
+
+    <!-- ============ SECTION 3 ============ -->
+    <div class="part-head"><div class="lbl">Section 3</div><h2>Creative Applications</h2></div>
+
+    <section class="sec" id="s3-1" style="--c:var(--ultramarine)">
+      <div class="sec-h"><div class="daub">3.1</div><h3>Image-to-Image Editing</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$x_{t_{start}} = (1-t_{start})\,\epsilon + t_{start}\,x_1,\qquad t_{start}\in\{0.02,\,0.04,\,0.06,\,0.10,\,0.14,\,0.25,\,0.50\}$$</div>
+      <p class="prose">To edit a real image, I noise it to some starting time \(t_{start}\) and then run the Euler sampler from there to t = 1. The starting time made the edit more or less pronounced: as we increase the starting time, the edit shows less and less (at an early starting time it's basically a whole different image).</p>
+      <figure class="board"><a class="zoom" href="images/3-1_edit_campanile.jpg"><div class="canvas"><img loading="lazy" src="images/3-1_edit_campanile.jpg" alt="campanile edits"></div></a><figcaption><em>Campanile</em> · original + seven starting times</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/3-1_edit_mine1.jpg"><div class="canvas"><img loading="lazy" src="images/3-1_edit_mine1.jpg" alt="my image 1 edits"></div></a><figcaption><em>my image 1</em> · original + seven starting times</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/3-1_edit_mine2.jpg"><div class="canvas"><img loading="lazy" src="images/3-1_edit_mine2.jpg" alt="my image 2 edits"></div></a><figcaption><em>my image 2</em> · original + seven starting times</figcaption></figure>
+
+      <h4 class="subsec">Editing hand-drawn &amp; web images</h4>
+      <p class="prose">Similar trend for the Mona Lisa and the drawings. Here there is some time t that is more optimal for the edit, and it's a tradeoff.</p>
+      <figure class="board"><a class="zoom" href="images/3-1_edit_web.jpg"><div class="canvas"><img loading="lazy" src="images/3-1_edit_web.jpg" alt="web image edits"></div></a><figcaption><em>web image</em> · original + seven starting times</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/3-1_edit_drawing1.jpg"><div class="canvas"><img loading="lazy" src="images/3-1_edit_drawing1.jpg" alt="drawing 1 edits"></div></a><figcaption><em>drawing 1</em> · original + seven starting times</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/3-1_edit_drawing2.jpg"><div class="canvas"><img loading="lazy" src="images/3-1_edit_drawing2.jpg" alt="drawing 2 edits"></div></a><figcaption><em>drawing 2</em> · original + seven starting times</figcaption></figure>
+    </section>
+
+    <section class="sec" id="s3-2" style="--c:var(--sap)">
+      <div class="sec-h"><div class="daub">3.2</div><h3>Text-Guided Image Editing</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <p class="prose">Same process as 3.1, but instead of "a high quality photo" I use an edit prompt, so the model pulls the image toward that text. The edit did ok (it seems like around t = 0.10 is where we start to see the beginning of adherence to the actual image, and past that it gets closer and closer).</p>
+      <figure class="board"><a class="zoom" href="images/3-2_text_campanile.jpg"><div class="canvas"><img loading="lazy" src="images/3-2_text_campanile.jpg" alt="campanile text edit"></div></a><figcaption><em>Campanile</em> → “a photograph of a skyscraper”</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/3-2_text_mine1.jpg"><div class="canvas"><img loading="lazy" src="images/3-2_text_mine1.jpg" alt="my image 1 text edit"></div></a><figcaption><em>my image 1</em> → “a photograph of a man with a mustache”</figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/3-2_text_mine2.jpg"><div class="canvas"><img loading="lazy" src="images/3-2_text_mine2.jpg" alt="my image 2 text edit"></div></a><figcaption><em>my image 2</em> → “a coffee mug on a table”</figcaption></figure>
+    </section>
+
+    <section class="sec" id="s3-3" style="--c:var(--violet)">
+      <div class="sec-h"><div class="daub">3.3</div><h3>Visual Anagrams</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$v = \tfrac{1}{2}\Big[v_{cfg}(x, t, c_a) + F\big(v_{cfg}(F(x), t, c_b)\big)\Big],\qquad F = \text{rotate } 180^\circ$$</div>
+      <p class="prose">At every step I take the CFG velocity for the upright image with one prompt, plus the velocity for the image rotated 180° with the other prompt (rotated back), and average the two. That way the image has to make sense both ways. The anagrams are cool: the old man and woman work well, while the car and horse is okay, but the horse is a bit too embedded.</p>
+      <div class="row">
+        <figure class="board"><a class="zoom" href="images/3-3_anagram_1.jpg"><div class="canvas"><img loading="lazy" src="images/3-3_anagram_1.jpg" alt="anagram 1"></div></a><figcaption>upright: <em>“an oil painting of a grumpy old man”</em><br>rotated: <em>“an oil painting of a happy woman”</em></figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/3-3_anagram_2.jpg"><div class="canvas"><img loading="lazy" src="images/3-3_anagram_2.jpg" alt="anagram 2"></div></a><figcaption>upright: <em>“a lithograph of a sports car”</em><br>rotated: <em>“a lithograph of a horse”</em></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="sec" id="s3-4" style="--c:var(--alizarin)">
+      <div class="sec-h"><div class="daub">3.4</div><h3>Hybrid Images</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$v = \text{lowpass}(v_a) + v_b - \text{lowpass}(v_b),\qquad \text{Gaussian } \sigma = 16,\ \text{kernel } 265$$</div>
+      <p class="prose">At every step I combine the low frequencies of one prompt's velocity with the high frequencies of the other's (Gaussian σ = 16). Up close you see the high-frequency prompt, and from far away (or tiny, like the 64 px version) the low-frequency one takes over. These are also cool. Both lithographs seem to work nicely, though the book is a little lengthy and the bread is an interesting shape.</p>
+
+      <h4 class="subsec">Skyscraper / Book</h4>
+      <div class="pair-hybrid">
+        <figure class="board full"><a class="zoom" href="images/3-4_hybrid1_full.jpg"><div class="canvas"><img loading="lazy" src="images/3-4_hybrid1_full.jpg" alt="hybrid 1 full"></div></a><figcaption>close: <em>“a lithograph of a book”</em></figcaption></figure>
+        <figure class="board small"><div class="canvas"><img loading="lazy" src="images/3-4_hybrid1_small.png" alt="hybrid 1 small"></div><figcaption>distant:<br><em>“a lithograph of a skyscraper”</em></figcaption></figure>
+      </div>
+
+      <h4 class="subsec">Cat / Bread</h4>
+      <div class="pair-hybrid">
+        <figure class="board full"><a class="zoom" href="images/3-4_hybrid2_full.jpg"><div class="canvas"><img loading="lazy" src="images/3-4_hybrid2_full.jpg" alt="hybrid 2 full"></div></a><figcaption>close: <em>“a lithograph of a bread”</em></figcaption></figure>
+        <figure class="board small"><div class="canvas"><img loading="lazy" src="images/3-4_hybrid2_small.png" alt="hybrid 2 small"></div><figcaption>distant:<br><em>“a lithograph of a cat”</em></figcaption></figure>
+      </div>
+    </section>
+
+
+    <!-- ================= PART B ================= -->
+    <div class="part-banner"><div class="lbl">Part B</div><h2>Flow Matching <span class="paint">from Scratch</span></h2></div>
+    <p class="prose">Part B is building a UNet from scratch.</p>
+    <div class="facts">
+      <span>data <b>MNIST, pixels in [0, 1]</b></span>
+      <span>GPU <b>NVIDIA L4</b></span>
+      <span>seed <b>180</b></span>
+      <span>velocity target <b>x₁ − x₀</b></span>
+      <span>guidance <b>γ = 5</b></span>
+    </div>
+
+    <!-- ============ B SECTION 1 ============ -->
+    <div class="part-head"><div class="lbl">Part B · Section 1</div><h2>Training a Single-Step Denoising UNet</h2></div>
+
+    <section class="sec" id="b1-1" style="--c:var(--prussian)">
+      <div class="sec-h"><div class="daub">1.1</div><h3>Implementing the UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <p class="prose">The UNet is built from a few simple ops: Conv (3×3 conv, BatchNorm, GELU), DownConv (the same but stride 2, so it halves the size), UpConv (a 4×4 transposed conv that doubles it), Flatten (a 7×7 average pool down to 1×1) and Unflatten (a 7×7 transposed conv back up to 7×7). The encoder goes 28 → 14 → 7 → 1, the decoder mirrors it, and at each level the decoder concatenates the matching encoder features as a skip connection. A last 3×3 conv maps the D hidden channels back to one channel.</p>
+    </section>
+
+    <section class="sec" id="b1-2" style="--c:var(--sap)">
+      <div class="sec-h"><div class="daub">1.2</div><h3>Using the UNet to Train a Denoiser</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$z = x + \sigma\,\epsilon,\quad \epsilon\sim\mathcal{N}(0,I),\qquad L = \mathbb{E}\,\lVert D_\theta(z) - x\rVert^2$$</div>
+      <p class="prose">To make training pairs I take a clean digit \(x\) and add Gaussian noise, \(z = x + \sigma\epsilon\), and the denoiser learns to map \(z\) back to \(x\) with an L2 loss. The grid shows the same ten digits as σ goes from 0 to 1.</p>
+      <figure class="board"><a class="zoom" href="images/b1-2_noise_levels.png"><div class="canvas"><img loading="lazy" src="images/b1-2_noise_levels.png" alt="b1-2_noise_levels"></div></a><figcaption>rows: <em>σ = 0.0 · 0.2 · 0.4 · 0.6 · 0.8 · 1.0</em></figcaption></figure>
+
+      <h4 class="subsec">1.2.1 · Training</h4>
+      <div class="facts">
+        <span>σ <b>0.5</b></span><span>D <b>128</b></span><span>batch <b>256</b></span><span>Adam lr <b>1e-4</b></span><span>epochs <b>5</b></span>
+      </div>
+      <p class="prose">During epoch 1 the images still resemble the shapes, but they tend to be a little blurry, missing features, or otherwise imperfect. After epoch 5 we see less of this (although if you look at the one in the middle, it still has some fade to it).</p>
+      <figure class="board plot"><a class="zoom" href="images/b1-2-1_loss.png"><div class="canvas"><img loading="lazy" src="images/b1-2-1_loss.png" alt="b1-2-1_loss"></div></a><figcaption>training loss</figcaption></figure>
+      <div class="row two">
+        <figure class="board"><a class="zoom" href="images/b1-2-1_denoise_epoch1.png"><div class="canvas"><img loading="lazy" src="images/b1-2-1_denoise_epoch1.png" alt="b1-2-1_denoise_epoch1"></div></a><figcaption>after <em>epoch 1</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-1_denoise_epoch5.png"><div class="canvas"><img loading="lazy" src="images/b1-2-1_denoise_epoch5.png" alt="b1-2-1_denoise_epoch5"></div></a><figcaption>after <em>epoch 5</em> · clean / noisy / denoised</figcaption></figure>
+      </div>
+
+      <h4 class="subsec">1.2.2 · Out-of-Distribution Testing</h4>
+      <p class="prose">σ = 0.6 is the last level where it looks good. After that point (0.8) the images still kind of look like the original, but we see way more artifacts and the objects become blobby. I think it fails there as opposed to an earlier step because it was trained at σ = 0.5, so noise on top of that probably isn't accounted for, and the model "learns" that it might've been part of the original image, thus leading to the artifacts we see.</p>
+      <div class="row two">
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_00.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_00.png" alt="b1-2-2_ood_00"></div></a><figcaption><em>σ = 0.0</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_02.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_02.png" alt="b1-2-2_ood_02"></div></a><figcaption><em>σ = 0.2</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_04.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_04.png" alt="b1-2-2_ood_04"></div></a><figcaption><em>σ = 0.4</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_05.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_05.png" alt="b1-2-2_ood_05"></div></a><figcaption><em>σ = 0.5</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_06.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_06.png" alt="b1-2-2_ood_06"></div></a><figcaption><em>σ = 0.6</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_08.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_08.png" alt="b1-2-2_ood_08"></div></a><figcaption><em>σ = 0.8</em> · clean / noisy / denoised</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-2_ood_10.png"><div class="canvas"><img loading="lazy" src="images/b1-2-2_ood_10.png" alt="b1-2-2_ood_10"></div></a><figcaption><em>σ = 1.0</em> · clean / noisy / denoised</figcaption></figure>
+      </div>
+
+      <h4 class="subsec">1.2.3 · Denoising Pure Noise</h4>
+      <div class="eq">$$z = \epsilon\sim\mathcal{N}(0,I),\qquad L = \mathbb{E}\,\lVert D_\theta(\epsilon) - x\rVert^2$$</div>
+      <p class="prose">It looks like the average of all the digits. Since the input is all noise, across all samples the image provides no general starting point, so seeing noise, it doesn't really know where to go. Thus, to minimize MSE as per usual, it just chooses the average, which is a feature.</p>
+      <figure class="board plot"><a class="zoom" href="images/b1-2-3_loss.png"><div class="canvas"><img loading="lazy" src="images/b1-2-3_loss.png" alt="b1-2-3_loss"></div></a><figcaption>training loss on pure noise</figcaption></figure>
+      <div class="row two">
+        <figure class="board"><a class="zoom" href="images/b1-2-3_pure_epoch1.png"><div class="canvas"><img loading="lazy" src="images/b1-2-3_pure_epoch1.png" alt="b1-2-3_pure_epoch1"></div></a><figcaption>after <em>epoch 1</em> · clean / noise / prediction</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b1-2-3_pure_epoch5.png"><div class="canvas"><img loading="lazy" src="images/b1-2-3_pure_epoch5.png" alt="b1-2-3_pure_epoch5"></div></a><figcaption>after <em>epoch 5</em> · clean / noise / prediction</figcaption></figure>
+      </div>
+    </section>
+
+    <!-- ============ B SECTION 2 ============ -->
+    <div class="part-head"><div class="lbl">Part B · Section 2</div><h2>Flow Matching</h2></div>
+
+    <section class="sec" id="b2-1" style="--c:var(--violet)">
+      <div class="sec-h"><div class="daub">2.1</div><h3>Implementing a Time-Conditioned UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$x_t = (1-t)\,x_0 + t\,x_1,\qquad x_0\sim\mathcal{N}(0,I),\qquad L = \mathbb{E}\,\big\lVert u_\theta(x_t, t) - (x_1 - x_0)\big\rVert^2$$</div>
+      <p class="prose">Instead of denoising in one step, the UNet now takes a point \(x_t\) on the straight line between noise \(x_0\) and a digit \(x_1\) and predicts the velocity \(x_1 - x_0\) that pushes it toward the digit. The time \(t\) goes through two FCBlocks (Linear, GELU, Linear), and their outputs scale the unflattened features and the output of the first up block.</p>
+    </section>
+
+    <section class="sec" id="b2-2" style="--c:var(--sienna)">
+      <div class="sec-h"><div class="daub">2.2</div><h3>Training the Time-Conditioned UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="facts">
+        <span>D <b>64</b></span><span>batch <b>64</b></span><span>Adam lr <b>1e-2</b></span><span>ExponentialLR <b>γ = 0.1<sup>1/10</sup></b></span><span>epochs <b>10</b></span>
+      </div>
+      <p class="prose">Each step picks a random \(t \in [0,1]\) per image, builds \(x_t\) from fresh noise, and trains on the MSE between the predicted and true velocity. The learning rate decays exponentially so it ends 10× lower after the 10 epochs.</p>
+      <figure class="board plot"><a class="zoom" href="images/b2-2_loss.png"><div class="canvas"><img loading="lazy" src="images/b2-2_loss.png" alt="b2-2_loss"></div></a><figcaption>time-conditioned flow matching loss</figcaption></figure>
+    </section>
+
+    <section class="sec" id="b2-3" style="--c:var(--alizarin)">
+      <div class="sec-h"><div class="daub">2.3</div><h3>Sampling from the Time-Conditioned UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$x_{t+\Delta t} = x_t + \Delta t\,u_\theta(x_t, t),\qquad \Delta t = 1/50,\ \ t: 0 \to 1$$</div>
+      <p class="prose">After epoch 1 they don't look that good, at epoch 5 they become a bit more recognizable, and after epoch 10 I can tell what each digit is, but it still looks like it was written illegibly (i.e. the handwriting isn't good). This is even more so on the digits with more complex twists and turns, such as the 8.</p>
+      <figure class="board"><a class="zoom" href="images/b2-2_epoch1.png"><div class="canvas"><img loading="lazy" src="images/b2-2_epoch1.png" alt="b2-2_epoch1"></div></a><figcaption>after <em>epoch 1</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/b2-2_epoch5.png"><div class="canvas"><img loading="lazy" src="images/b2-2_epoch5.png" alt="b2-2_epoch5"></div></a><figcaption>after <em>epoch 5</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/b2-2_epoch10.png"><div class="canvas"><img loading="lazy" src="images/b2-2_epoch10.png" alt="b2-2_epoch10"></div></a><figcaption>after <em>epoch 10</em></figcaption></figure>
+      <figure class="board"><a class="zoom" href="images/b2-3_samples.png"><div class="canvas"><img loading="lazy" src="images/b2-3_samples.png" alt="b2-3_samples"></div></a><figcaption>final samples</figcaption></figure>
+    </section>
+
+    <section class="sec" id="b2-4" style="--c:var(--cadmium)">
+      <div class="sec-h"><div class="daub">2.4</div><h3>Implementing a Class-Conditioned UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$\text{unflat} \leftarrow c_1\odot\text{unflat} + t_1,\qquad \text{up}_1 \leftarrow c_2\odot\text{up}_1 + t_2,\qquad c \to \mathbf{0}\ \text{with } p_{uncond} = 0.1$$</div>
+      <p class="prose">On top of the time conditioning, the digit label goes in as a one-hot vector \(c\) through two more FCBlocks. The class embedding scales the features and the time embedding shifts them. 10% of the time the class vector is zeroed out, so the same model also learns the unconditional velocity, which is what classifier-free guidance needs at sampling time.</p>
+    </section>
+
+    <section class="sec" id="b2-5" style="--c:var(--ultramarine)">
+      <div class="sec-h"><div class="daub">2.5</div><h3>Training the Class-Conditioned UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 6 C 60 1, 120 9, 218 4" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="facts">
+        <span>D <b>64</b></span><span>batch <b>64</b></span><span>Adam lr <b>1e-2</b></span><span>ExponentialLR <b>γ = 0.1<sup>1/10</sup></b></span><span>p<sub>uncond</sub> <b>0.1</b></span><span>epochs <b>10</b></span>
+      </div>
+      <p class="prose">Same training loop as 2.2, just with the labels passed in and class dropout at \(p_{uncond} = 0.1\).</p>
+      <figure class="board plot"><a class="zoom" href="images/b2-5_loss.png"><div class="canvas"><img loading="lazy" src="images/b2-5_loss.png" alt="b2-5_loss"></div></a><figcaption>class-conditioned loss, <em>with scheduler</em></figcaption></figure>
+    </section>
+
+    <section class="sec" id="b2-6" style="--c:var(--sap)">
+      <div class="sec-h"><div class="daub">2.6</div><h3>Sampling from the Class-Conditioned UNet</h3></div>
+      <svg class="underline" viewBox="0 0 220 10"><path d="M2 5 C 70 9, 140 1, 218 6" fill="none" stroke-width="4" stroke-linecap="round"/></svg>
+      <div class="eq">$$u = u_u + \gamma\,(u_c - u_u),\qquad \gamma = 5,\quad 300\ \text{Euler steps}$$</div>
+      <p class="prose">With class conditioning, epoch 1 already looks pretty good with some noise artifacts, epoch 5 is almost perfect (again, some artifacts on the 9), and epoch 10 is practically perfect. This is so much better than 2.3.</p>
+      <div class="row">
+        <figure class="board"><a class="zoom" href="images/b2-6_epoch1.png"><div class="canvas"><img loading="lazy" src="images/b2-6_epoch1.png" alt="b2-6_epoch1"></div></a><figcaption>after <em>epoch 1</em> · four of each digit</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_epoch5.png"><div class="canvas"><img loading="lazy" src="images/b2-6_epoch5.png" alt="b2-6_epoch5"></div></a><figcaption>after <em>epoch 5</em> · four of each digit</figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_epoch10.png"><div class="canvas"><img loading="lazy" src="images/b2-6_epoch10.png" alt="b2-6_epoch10"></div></a><figcaption>after <em>epoch 10</em> · four of each digit</figcaption></figure>
+      </div>
+
+      <h4 class="subsec">Getting rid of the scheduler</h4>
+      <div class="facts"><span>constant Adam lr <b>1e-3</b></span><span>epochs <b>10</b></span></div>
+      <p class="prose">I noticed the scheduler's learning rate already decays towards 1e-3, so I decided that would be a good constant learning rate. It converges pretty well, and although the learning jumps around a bit more, for the most part it works.</p>
+      <figure class="board plot"><a class="zoom" href="images/b2-5_nosched_loss.png"><div class="canvas"><img loading="lazy" src="images/b2-5_nosched_loss.png" alt="b2-5_nosched_loss"></div></a><figcaption>class-conditioned loss, <em>no scheduler</em></figcaption></figure>
+      <div class="row two">
+        <figure class="board"><a class="zoom" href="images/b2-6_epoch1.png"><div class="canvas"><img loading="lazy" src="images/b2-6_epoch1.png" alt="b2-6_epoch1"></div></a><figcaption>scheduler · <em>epoch 1</em></figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_nosched_epoch1.png"><div class="canvas"><img loading="lazy" src="images/b2-6_nosched_epoch1.png" alt="b2-6_nosched_epoch1"></div></a><figcaption>no scheduler · <em>epoch 1</em></figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_epoch5.png"><div class="canvas"><img loading="lazy" src="images/b2-6_epoch5.png" alt="b2-6_epoch5"></div></a><figcaption>scheduler · <em>epoch 5</em></figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_nosched_epoch5.png"><div class="canvas"><img loading="lazy" src="images/b2-6_nosched_epoch5.png" alt="b2-6_nosched_epoch5"></div></a><figcaption>no scheduler · <em>epoch 5</em></figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_epoch10.png"><div class="canvas"><img loading="lazy" src="images/b2-6_epoch10.png" alt="b2-6_epoch10"></div></a><figcaption>scheduler · <em>epoch 10</em></figcaption></figure>
+        <figure class="board"><a class="zoom" href="images/b2-6_nosched_epoch10.png"><div class="canvas"><img loading="lazy" src="images/b2-6_nosched_epoch10.png" alt="b2-6_nosched_epoch10"></div></a><figcaption>no scheduler · <em>epoch 10</em></figcaption></figure>
+      </div>
+    </section>
+
+    <svg class="divider" viewBox="0 0 1000 26" preserveAspectRatio="none"><path d="M5 15 C 200 4, 380 22, 560 12 S 860 4, 995 14" fill="none" stroke="#a0522d" stroke-width="4" stroke-linecap="round"/></svg>
+  </div>
+</body>
+</html>
